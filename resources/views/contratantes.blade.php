@@ -38,7 +38,7 @@
         <div class="card mb-4 p-3 shadow-sm">
             <div class="row align-items-center">
                 <div class="col-auto">
-                <img src="{{ $usuario->foto_perfil ? asset('storage/' . $usuario->foto_perfil) : asset('imgs/user.png') }}" class="rounded-circle" width="80" height="60">
+                  <img src="{{ $usuario->foto_perfil ? asset('storage/' . $usuario->foto_perfil) : asset('imgs/user.png') }}" class="rounded-circle" width="100" height="100">
                 </div>
                 <div class="col-md-8">
                     <h5>{{ $usuario->nome }}</h5>
