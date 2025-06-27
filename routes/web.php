@@ -57,6 +57,12 @@ Route::get('/home', function () {
     return view('home');
 })->name('homepage');
 
+Route::get('/sobre', function () {
+    return view('sobre');
+})->name('sobrepage');
+
+
+
 Route::get('/', function () {
     return view('home');
 });

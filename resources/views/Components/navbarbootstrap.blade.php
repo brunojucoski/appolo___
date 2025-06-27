@@ -35,7 +35,7 @@
           </li>
 
           <li class="nav-item">
-            <a class="nav-link mx-lg-2" href="#">Sobre</a>
+            <a class="nav-link mx-lg-2" href="{{ route('sobrepage') }}">Sobre</a>
           </li>
 
         </ul>
