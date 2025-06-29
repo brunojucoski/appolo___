@@ -112,6 +112,11 @@ main {
     margin: 1rem auto;
   }
 
+  .text-sobre{
+     color: var(--roxo-appolo);
+    font-family: "Jost", sans-serif !important;
+  }
+
   .text-nome {
     color: var(--roxo-appolo);
     font-weight: bold;
@@ -482,6 +487,12 @@ main {
     .navbar {
         padding: 0.3rem !important;
 
+    }
+
+    .imagem-centralizada-mobile{
+        display: flex !important;
+        justify-content: center !important;
+         width: 100% !important;
     }
 
     .modal_proposta {

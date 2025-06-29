@@ -133,14 +133,15 @@
           <p class="text-muted"><i class="bi bi-geo-alt"></i>  {{ $usuario->cidade ?? 'Localidade não definida' }}  </p>
           
           <p class="text-muted"><i class="bi bi-telephone"></i> {{ formatarTelefone($usuario->telefone) }}</p>
-                
+             
+          <p><strong>Endereço:</strong> {{ formatarCep($usuario->cep) }} , {{ $usuario->bairro }} , {{ $usuario->endereco }}</p>
         
                @if($usuario->tipo_usuario == 2)
           <i class="bi bi-brush"></i>
                        {{ $portfolio->descricao ?? 'Descrição do portfólio não disponível' }}
                 </p>
               
-             <p><strong>Endereço:</strong> {{ formatarCep($usuario->cep) }} , {{ $usuario->bairro }} , {{ $usuario->endereco }}</p>
+             
                 
                 <div class="social-icons my-3">
 

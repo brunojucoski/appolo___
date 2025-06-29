@@ -12,7 +12,8 @@ use App\Http\Controllers\{
     PostPortfolioController
 };
 use App\Http\Controllers\NotificacaoController;
-
+use App\Http\Controllers\FeedbackArtistaController;
+use App\Http\Controllers\FeedbackContratanteController;
 use App\Http\Controllers\PropostaContratoController;
 use Illuminate\Http\Request;
 
@@ -46,7 +47,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 
 
-// rotas site
+// rotas site PUBLICO
 
 
 Route::get('/login', function () {
@@ -67,12 +68,11 @@ Route::get('/', function () {
     return view('home');
 });
 
+
 Route::get('/solicitantes', [UsuarioController::class, 'listarContratantes'])->name('usuarios.contratantes');
 
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-});
+
 // ->middleware(['auth', 'verified'])->name('dashboard');
 
 
@@ -130,11 +130,24 @@ Route::middleware('auth')->get('/minhas-propostas', [PropostaContratoController:
 //listagem dos usuários
 Route::get('/artistas', [UsuarioController::class, 'listarPublico'])->name('usuarios.publico');
 
-Route::post('/notificacoes/ler-todas', [NotificacaoController::class, 'lerTodas'])->name('notificacoes.lerTodas');
-
 Route::get('/perfil/{id}', [UsuarioController::class, 'showPublic'])->name('usuarios.public');
+Route::post('/notificacoes/ler-todas', [NotificacaoController::class, 'lerTodas'])->name('notificacoes.lerTodas');
+Route::post('/notificacoes/{id}/marcar-lida', [NotificacaoController::class, 'marcarComoLida']);
 
 
+
+//FEEDBACKS
+Route::get('/feedbacks/pendentes', [\App\Http\Controllers\FeedbackController::class, 'verificarPendentes']);
+Route::post('/feedbacks/salvar', [FeedbackController::class, 'salvar'])->name('feedbacks.salvar');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/feedbacks/pendentes', [FeedbackArtistaController::class, 'pendentes'])->name('feedbacks.pendentes');
+    Route::post('/feedbacks/artistas', [FeedbackArtistaController::class, 'store'])->name('feedbacks.artistas.store');
+
+    Route::post('/feedbacks/contratantes', [FeedbackContratanteController::class, 'store'])->name('feedbacks.contratantes.store');
+});
+
+
+//LOGOUT
 Route::post('/logout', function () {
     Auth::logout();
     return redirect('/');

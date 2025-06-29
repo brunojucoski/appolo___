@@ -36,5 +36,20 @@ class PropostaContrato extends Model
     }
 
     
+    // Feedback dado ao artista (por contratante)
+public function feedbackArtista()
+{
+    return $this->hasOne(FeedbackArtista::class, 'id_usuario_avaliador', 'id_usuario_avaliador')
+                ->whereColumn('id_artista', 'id_artista');
+}
+
+// Feedback dado ao contratante (por artista)
+public function feedbackContratante()
+{
+    return $this->hasOne(FeedbackContratante::class, 'id_usuario_avaliador', 'id_usuario_avaliador')
+                ->whereHas('proposta', function ($q) {
+                    $q->whereColumn('id_usuario_avaliador', 'id_usuario_avaliador');
+                });
+}
 
 }

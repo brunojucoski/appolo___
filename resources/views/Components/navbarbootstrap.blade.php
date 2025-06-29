@@ -216,7 +216,7 @@
             
             <div class="mb-3">
                             <label class="form-label">CEP</label>
-                            <input type="text" name="cep" onblur="buscarCEP(this.value)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); }" class="form-control" value="{{  Auth::user()->cep }}" maxlength="8" inputmode="numeric">
+                            <input type="text" name="cep" onblur="buscarCEP(this.value)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); }" class="form-control" value="{{  Auth::user()->cep }}" maxlength="9" inputmode="numeric">
                         </div>
 
                         <div class="mb-3">
@@ -322,40 +322,6 @@
 
   @endauth
 
-  <!-- Modal de Notificação de Proposta -->
-<div class="modal fade" id="modalPropostaNotificacao" tabindex="-1" aria-labelledby="modalPropostaNotificacaoLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title botao_home" style="text-transform: uppercase;"id="modalPropostaNotificacaoLabel">Detalhes da Proposta</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-     <div class="modal-body">
-    <h5 id="propostaTitulo"></h5>
-    <p><strong>De:</strong> <span id="propostaAutor"></span></p>
-    <p id="propostaDescricao"></p>
-    <p><strong>Data do serviço:</strong> <span id="propostaData"></span></p>
-
-    <hr>
-
-    
-        <div class="mb-3">
-            <h6> Para aceitar ou recusar as propostas de serviço acesse a página de minhas propostas clicando no botão abaixo </h6>
-        </div>
-
-        <input type="hidden" id="propostaId" name="proposta_id">
-
-        <div class="d-flex justify-content-end">
-
-            <button type="button" class="btn btn-outline-custom me-2"  href="{{ route('propostas.minhas') }}"> Minhas Propostas </button>
-
-        </div>
-   
-</div>
-    </div>
-  </div>
-</div>
-
 
 
 
@@ -379,89 +345,192 @@ function carregarNotificacoes() {
             contador.style.display = 'inline-block';
 
             data.forEach(notificacao => {
-                const item = document.createElement('li');
-                item.className = 'dropdown-item';
-                item.textContent = `${notificacao.proposta.usuario_avaliador.nome} lhe enviou uma proposta de trabalho`;
-                item.style.cursor = 'pointer';
+            const item = document.createElement('li');
+            item.className = 'dropdown-item';
+            item.textContent = `${notificacao.proposta.usuario_avaliador.nome} lhe enviou uma proposta de trabalho`;
+            item.style.cursor = 'pointer';
 
-                // Redirecionar para a rota propostas.minhas
-                item.addEventListener('click', () => {
+            item.addEventListener('click', () => {
+                fetch(`/notificacoes/${notificacao.id}/marcar-lida`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                }).then(() => {
                     window.location.href = "{{ route('propostas.minhas') }}";
                 });
-
-                lista.appendChild(item);
             });
+
+    lista.appendChild(item);
+});
         });
 }
 </script>
 
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/inputmask.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const editOffcanvas = document.getElementById('editOffcanvas');
+    const cepInput = document.querySelector('input[name="cep"]');
+    const telefoneInput = document.querySelector('input[name="telefone"]');
 
-    editOffcanvas.addEventListener('shown.bs.offcanvas', function () {
-        const cepInput = editOffcanvas.querySelector('input[name="cep"]');
-        const telInput = editOffcanvas.querySelector('input[name="telefone"]');
+    // Máscara de CEP
+    cepInput.addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
 
-        if (cepInput) {
-            Inputmask("99999-999").mask(cepInput);
-            cepInput.value = Inputmask.format(cepInput.value, { mask: "99999-999" });
+        if (value.length > 5) {
+            value = value.slice(0, 5) + '-' + value.slice(5, 8);
         }
 
-        if (telInput) {
-            Inputmask("(99) 99999-9999").mask(telInput);
-            telInput.value = Inputmask.format(telInput.value, { mask: "(99) 99999-9999" });
-        }
+        e.target.value = value;
     });
+
+    // Máscara de Telefone (formato: (00)00000-0000)
+    telefoneInput.addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, ''); // remove tudo que não for número
+
+        if (value.length > 11) value = value.slice(0, 11); // limita a 11 dígitos
+
+        if (value.length >= 2) {
+            value = '(' + value.slice(0, 2) + ')' + value.slice(2);
+        }
+
+        if (value.length > 8) {
+            value = value.slice(0, 9) + '-' + value.slice(9);
+        }
+
+        e.target.value = value;
+    });
+
+    telefoneInput.setAttribute('maxlength', '15'); // (00)00000-0000 tem 14 caracteres
 });
+</script>
+
+
+   
+<script>
 
 function buscarCEP(cep) {
-    // Remove tudo que não for número
-    // cep = cep.replace(/\D/g, '');
-
-    // if (cep.length !== 8) {
-    //     alert("CEP inválido. Digite 8 números.");
-    //     return;
-    // }
 
     console.log(`https://viacep.com.br/ws/${cep}/json/`)
 
-    fetch(`https://viacep.com.br/ws/${cep}/json/`, { method: 'GET' })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Erro ao buscar o CEP.");
-            }
-            console.log(response.json())
-            return response.json();
-        })
-        .then(data => {
-            if (data.erro) {
-                alert("CEP não encontrado.");
-                return;
-            }
+ fetch(`https://viacep.com.br/ws/${cep}/json/`)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Erro ao buscar o CEP.");
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.erro) {
+            alert("CEP não encontrado.");
+            return;
+        }
 
-            // Preenche os campos do formulário
-            const form = document.querySelector('#editOffcanvas form');
-            if (form) {
-                form.querySelector('input[name="cidade"]').value = data.localidade || '';
-                form.querySelector('input[name="bairro"]').value = data.bairro || '';
-                form.querySelector('input[name="endereco"]').value = data.logradouro || '';
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            console.error("sdawawdaw");
-            alert("Erro ao consultar o CEP.");
-        });
+        const form = document.querySelector('#editOffcanvas form');
+        if (form) {
+            form.querySelector('input[name="cidade"]').value = data.localidade || '';
+            form.querySelector('input[name="bairro"]').value = data.bairro || '';
+            form.querySelector('input[name="endereco"]').value = data.logradouro || '';
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        alert("Erro ao consultar o CEP.");
+    });
         
 }
 
 
 </script>
 
+@if(session('success'))
+  <div class="alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 z-3" role="alert" style="width: 300px;">
+    {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+  </div>
+@endif
+
+
+@auth
+<div class="modal fade" id="feedbackModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ Auth::user()->tipo_usuario == 3 ? route('feedbacks.artistas.store') : route('feedbacks.contratantes.store') }}">
+      @csrf
+      <input type="hidden" name="id_proposta" id="idPropostaFeedback">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Avalie sua experiência</h5>
+        </div>
+        <div class="modal-body text-center">
+          <div id="estrelas" class="mb-3">
+              @for ($i = 1; $i <= 5; $i++)
+                  <i class="bi bi-star star" data-value="{{ $i }}"></i>
+              @endfor
+              <input type="hidden" name="nota" id="notaEstrela" required>
+          </div>
+          <textarea name="comentario" class="form-control" placeholder="Deixe um comentário..." required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Enviar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+@endauth
+
+<style>
+  .star {
+    font-size: 2rem;
+    color: #ccc;
+    cursor: pointer;
+  }
+  .star.selecionada {
+    color: #FFD700;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let estrelas = document.querySelectorAll('.star');
+    estrelas.forEach(estrela => {
+      estrela.addEventListener('click', function () {
+        let valor = this.getAttribute('data-value');
+        document.getElementById('notaEstrela').value = valor;
+
+        estrelas.forEach(s => {
+          s.classList.remove('selecionada');
+          if (s.getAttribute('data-value') <= valor) {
+            s.classList.add('selecionada');
+          }
+        });
+      });
+    });
+  });
+</script>
+
+
+
+
+@auth
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        fetch("/feedbacks/pendentes")
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    // Insere o ID da proposta na modal para ser enviada
+                    document.getElementById('idPropostaFeedback').value = data[0].id;
+
+                    // Exibe a modal
+                    const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+                    modal.show();
+                }
+            })
+            .catch(error => console.error("Erro ao buscar feedbacks pendentes:", error));
+    });
+</script>
+@endauth
 
 
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>

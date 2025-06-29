@@ -226,7 +226,7 @@ class UsuarioController extends Controller
 public function listarPublico(Request $request)
 {
     $query = Usuario::where('tipo_usuario', 2)
-        ->with(['categoriasArtisticas'])
+        ->with(['categoriasArtisticas','portfolioArtista'])
         ->whereNotNull('nome');
 
     if ($request->filled('categoria')) {
@@ -242,6 +242,7 @@ public function listarPublico(Request $request)
 
     $usuarios = $query->get();
     $categorias = CategoriaArtistica::all();
+  
 
     $cidades = Usuario::whereNotNull('cidade')
     ->where('tipo_usuario', 2)

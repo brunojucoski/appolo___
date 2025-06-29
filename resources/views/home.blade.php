@@ -12,6 +12,13 @@
   
 <head> 
 
+<body> 
+
+
+
+
+
+
 
 <main>
   <section class="hero-section d-flex align-items-center">
@@ -37,6 +44,11 @@
 @include('Components.footer')
 
 </section> 
+
+
+</body>
+
+
 
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>

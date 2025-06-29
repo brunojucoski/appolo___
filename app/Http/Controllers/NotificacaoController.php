@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\PropostaContrato; 
 use App\Models\Usuario;
 use App\Models\Notificacao;
+use App\Models\TipoUsuario;
 
 class NotificacaoController extends Controller
 {
@@ -23,4 +24,18 @@ public function index()
 
     return response()->json($notificacoes);
 }
+
+public function marcarComoLida($id)
+{
+    $notificacao = Notificacao::where('id', $id)
+        ->where('usuario_id', auth()->id())
+        ->firstOrFail();
+
+    $notificacao->lida = true;
+    $notificacao->save();
+
+    return response()->json(['status' => 'ok']);
+}
+
+
 }
