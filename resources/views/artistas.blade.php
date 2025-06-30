@@ -24,10 +24,10 @@
 
 
 
+<main>
 
 
-
-<div class="container-listagem"> 
+<div class="container-listagem d-flex"> 
 <link rel="stylesheet" href="{{ asset('css/usuarios_publicos.css') }}"> {{-- opcional --}}
 
 <div class="container mt-5">
@@ -89,7 +89,7 @@
 </div>
 </div> 
 
+</main>
 
-
-
+@include('Components.footer')
 </body> 

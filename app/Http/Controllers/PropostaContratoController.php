@@ -17,6 +17,8 @@ class PropostaContratoController extends Controller
         return response()->json($propostas);
     }
 
+
+    
     public function store(Request $request)
     {
         $request->validate([

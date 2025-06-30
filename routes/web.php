@@ -137,16 +137,15 @@ Route::post('/notificacoes/{id}/marcar-lida', [NotificacaoController::class, 'ma
 
 
 //FEEDBACKS
-Route::get('/feedbacks/pendentes', [\App\Http\Controllers\FeedbackController::class, 'verificarPendentes']);
-Route::post('/feedbacks/salvar', [FeedbackController::class, 'salvar'])->name('feedbacks.salvar');
 Route::middleware(['auth'])->group(function () {
-    Route::get('/feedbacks/pendentes', [FeedbackArtistaController::class, 'pendentes'])->name('feedbacks.pendentes');
-    Route::post('/feedbacks/artistas', [FeedbackArtistaController::class, 'store'])->name('feedbacks.artistas.store');
+    // Verificações separadas
+    Route::get('/feedbacks/pendentes/artistas', [FeedbackArtistaController::class, 'verificarPendentes'])->name('feedbacks.pendentes.artistas');
+    Route::get('/feedbacks/pendentes/contratantes', [FeedbackContratanteController::class, 'verificarPendentes'])->name('feedbacks.pendentes.contratantes');
 
+    // Stores
+    Route::post('/feedbacks/artistas', [FeedbackArtistaController::class, 'store'])->name('feedbacks.artistas.store');
     Route::post('/feedbacks/contratantes', [FeedbackContratanteController::class, 'store'])->name('feedbacks.contratantes.store');
 });
-
-
 //LOGOUT
 Route::post('/logout', function () {
     Auth::logout();

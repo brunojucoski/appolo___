@@ -13,22 +13,9 @@
 @include('Components.navbarbootstrap')
 
 
-
+<main>
 
         
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -82,7 +69,7 @@
 </div>
 </div> 
 
-
-
+</main>
+@include('Components.footer')
 
 </body> 

@@ -42,7 +42,7 @@
 
 
 
-
+<main>
 
 
 
@@ -276,5 +276,12 @@
 
         
     </script>
+</main>
+@include('Components.footer')
+
 </body>
+
+
+
+
 </html>

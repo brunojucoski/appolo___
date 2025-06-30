@@ -9,6 +9,8 @@ class FeedbackContratante extends Model
 {
     use SoftDeletes;
 
+     protected $table = 'feedbacks_contratantes'; 
+
     protected $fillable = [
         'id_usuario',
         'id_usuario_avaliador',

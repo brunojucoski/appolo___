@@ -14,45 +14,33 @@ class FeedbackContratanteController extends Controller
 
 {
 
-
-    public function verificarPendentes()
+public function verificarPendentes()
 {
     $usuario = auth()->user();
 
-    if (!$usuario) return response()->json([]);
+    // Garante que apenas artistas (tipo_usuario == 2) acessem
+    if (!$usuario || $usuario->tipo_usuario !== 2) {
+        return response()->json([]);
+    }
 
-    if ($usuario->tipo_usuario == 2) {
-        $propostas = \App\Models\PropostaContrato::whereHas('portfolio', function ($q) use ($usuario) {
-            $q->where('id_usuario', $usuario->id);
+    $propostas = PropostaContrato::whereHas('artista.usuario', function ($q) use ($usuario) {
+            $q->where('id', $usuario->id);
         })
         ->where('data', '<', now())
         ->where('status', 'Finalizada')
-        ->whereDoesntHave('feedbackArtista', function ($q) use ($usuario) {
+        ->whereDoesntHave('feedbackContratante', function ($q) use ($usuario) {
             $q->where('id_usuario_avaliador', $usuario->id);
         })
         ->get();
-    } else if ($usuario->tipo_usuario == 3) {
-        $propostas = \App\Models\PropostaContrato::where('id_usuario_avaliador', $usuario->id)
-            ->where('data', '<', now())
-            ->where('status', 'Finalizada')
-            ->whereDoesntHave('feedbackContratante', function ($q) use ($usuario) {
-                $q->where('id_usuario_avaliador', $usuario->id);
-            })
-            ->get();
-    } else {
-        $propostas = collect();
-    }
 
     return response()->json($propostas);
 }
 
 
-
-
     public function store(Request $request)
     {
         $request->validate([
-            'id_proposta' => 'required|exists:propostas_contratos,id',
+            'id_proposta' => 'required|exists:proposta_contrato,id',
             'nota' => 'required|integer|min:1|max:5',
             'comentario' => 'required|string|max:1000',
         ]);
@@ -72,3 +60,4 @@ class FeedbackContratanteController extends Controller
 
     //
 }
+

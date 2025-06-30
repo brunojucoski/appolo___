@@ -15,61 +15,47 @@ use App\Models\FeedbackArtista;
 class FeedbackArtistaController extends Controller
 {
 
-
-    public function verificarPendentes()
+public function verificarPendentes()
 {
     $usuario = auth()->user();
 
-    if (!$usuario) return response()->json([]);
+    // Garante que apenas contratantes (tipo_usuario == 3) acessem
+    if (!$usuario || $usuario->tipo_usuario !== 3) {
+        return response()->json([]);
+    }
 
-    if ($usuario->tipo_usuario == 2) {
-        $propostas = \App\Models\PropostaContrato::whereHas('portfolio', function ($q) use ($usuario) {
-            $q->where('id_usuario', $usuario->id);
-        })
+    $propostas = \App\Models\PropostaContrato::where('id_usuario_avaliador', $usuario->id)
         ->where('data', '<', now())
         ->where('status', 'Finalizada')
         ->whereDoesntHave('feedbackArtista', function ($q) use ($usuario) {
             $q->where('id_usuario_avaliador', $usuario->id);
         })
         ->get();
-    } else if ($usuario->tipo_usuario == 3) {
-        $propostas = \App\Models\PropostaContrato::where('id_usuario_avaliador', $usuario->id)
-            ->where('data', '<', now())
-            ->where('status', 'Finalizada')
-            ->whereDoesntHave('feedbackContratante', function ($q) use ($usuario) {
-                $q->where('id_usuario_avaliador', $usuario->id);
-            })
-            ->get();
-    } else {
-        $propostas = collect();
-    }
 
     return response()->json($propostas);
 }
 
+//  public function pendentes()
+//     {
+//         $user = Auth::user();
 
+//         if ($user->tipo_usuario != 3) {
+//             return response()->json([]);
+//         }
 
- public function pendentes()
-    {
-        $user = Auth::user();
+//         $propostas = PropostaContrato::where('id_usuario_avaliador', $user->id)
+//             ->where('data', '<', now())
+//             ->where('status', 'Finalizada')
+//             ->get();
 
-        if ($user->tipo_usuario != 3) {
-            return response()->json([]);
-        }
+//         $pendentes = $propostas->filter(function ($proposta) {
+//             return !FeedbackArtista::where('id_usuario_avaliador', $proposta->id_usuario_avaliador)
+//                 ->where('id_artista', $proposta->id_artista)
+//                 ->exists();
+//         });
 
-        $propostas = PropostaContrato::where('id_usuario_avaliador', $user->id)
-            ->where('data', '<', now())
-            ->where('status', 'Finalizada')
-            ->get();
-
-        $pendentes = $propostas->filter(function ($proposta) {
-            return !FeedbackArtista::where('id_usuario_avaliador', $proposta->id_usuario_avaliador)
-                ->where('id_artista', $proposta->id_artista)
-                ->exists();
-        });
-
-        return response()->json($pendentes->values());
-    }
+//         return response()->json($pendentes->values());
+//     }
 
     public function store(Request $request)
     {

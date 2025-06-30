@@ -12,6 +12,15 @@
 </head>
     
 <body> 
+
+@if(session('success'))
+  <div class="alert alert-success alert-dismissible fade show position-fixed top-50 start-50 translate-middle-x mt-3 z-3" role="alert" style="width: 300px;">
+    {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+  </div>
+@endif
+
+
 <nav class="navbar navbar-expand-lg fixed-top">
   <div class="container-fluid">
     <a class="navbar-brand me-auto " href={{ route('homepage') }}>Appolo</a>
@@ -443,12 +452,7 @@ function buscarCEP(cep) {
 
 </script>
 
-@if(session('success'))
-  <div class="alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 z-3" role="alert" style="width: 300px;">
-    {{ session('success') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-  </div>
-@endif
+
 
 
 @auth
@@ -511,18 +515,20 @@ function buscarCEP(cep) {
 
 
 
-
 @auth
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        fetch("/feedbacks/pendentes")
+        const tipoUsuario = {{ auth()->user()->tipo_usuario }};
+        const rota = tipoUsuario === 2 
+            ? "/feedbacks/pendentes/contratantes"
+            : "/feedbacks/pendentes/artistas";
+
+        fetch(rota)
             .then(response => response.json())
             .then(data => {
                 if (data.length > 0) {
-                    // Insere o ID da proposta na modal para ser enviada
                     document.getElementById('idPropostaFeedback').value = data[0].id;
 
-                    // Exibe a modal
                     const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
                     modal.show();
                 }
@@ -531,7 +537,6 @@ function buscarCEP(cep) {
     });
 </script>
 @endauth
-
 
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
