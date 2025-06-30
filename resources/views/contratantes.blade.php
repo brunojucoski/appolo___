@@ -60,7 +60,7 @@
                     </div>
                 </div>
                 <div class="col-md-2 text-end">
-                    <a href="{{ route('usuarios.perfilPublico', $usuario->id) }}" class="btn btn-purple">Ver perfil</a>
+                    <a href="{{ route('usuarios.perfilPublico', $usuario->id) }}" class="btn btn-purple btn-outline-custom">Ver perfil</a>
                 </div>
             </div>
         </div>
