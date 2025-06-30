@@ -137,6 +137,7 @@ Route::post('/notificacoes/{id}/marcar-lida', [NotificacaoController::class, 'ma
 
 
 //FEEDBACKS
+
 Route::middleware(['auth'])->group(function () {
     // Verificações separadas
     Route::get('/feedbacks/pendentes/artistas', [FeedbackArtistaController::class, 'verificarPendentes'])->name('feedbacks.pendentes.artistas');

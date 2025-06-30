@@ -14,27 +14,30 @@ class FeedbackContratanteController extends Controller
 
 {
 
+
 public function verificarPendentes()
 {
     $usuario = auth()->user();
 
-    // Garante que apenas artistas (tipo_usuario == 2) acessem
-    if (!$usuario || $usuario->tipo_usuario !== 2) {
+    if (!$usuario || $usuario->tipo_usuario !== 3) {
         return response()->json([]);
     }
 
-    $propostas = PropostaContrato::whereHas('artista.usuario', function ($q) use ($usuario) {
-            $q->where('id', $usuario->id);
-        })
+    $propostas = PropostaContrato::with('artista') // traz nome artístico
+        ->where('id_usuario_avaliador', $usuario->id)
         ->where('data', '<', now())
         ->where('status', 'Finalizada')
-        ->whereDoesntHave('feedbackContratante', function ($q) use ($usuario) {
+        ->whereDoesntHave('feedbackArtista', function ($q) use ($usuario) {
             $q->where('id_usuario_avaliador', $usuario->id);
         })
         ->get();
 
     return response()->json($propostas);
 }
+
+
+
+
 
 
     public function store(Request $request)
@@ -46,13 +49,16 @@ public function verificarPendentes()
         ]);
 
         $proposta = PropostaContrato::find($request->id_proposta);
+            
+        
+            FeedbackContratante::create([
+                'id_proposta' => $proposta->id,
+                'id_usuario' => $proposta->id_usuario_avaliador,
+                'id_usuario_avaliador' => Auth::id(),
+                'nota' => $request->nota,
+                'comentario' => $request->comentario,
+            ]);
 
-        FeedbackContratante::create([
-            'id_usuario' => $proposta->id_usuario_avaliador,
-            'id_usuario_avaliador' => Auth::id(),
-            'nota' => $request->nota,
-            'comentario' => $request->comentario,
-        ]);
 
         return redirect()->back()->with('success', 'Feedback enviado com sucesso.');
     }

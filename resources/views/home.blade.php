@@ -19,7 +19,6 @@
 
 
 
-
 <main>
   <section class="hero-section d-flex align-items-center">
     <div class="container p-5">

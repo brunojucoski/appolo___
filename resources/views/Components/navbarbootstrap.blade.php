@@ -13,11 +13,31 @@
     
 <body> 
 
+
 @if(session('success'))
-  <div class="alert alert-success alert-dismissible fade show position-fixed top-50 start-50 translate-middle-x mt-3 z-3" role="alert" style="width: 300px;">
-    {{ session('success') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+  <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="text-nome" id="successModalLabel"> APPOLO </h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  {{ session('success') }}
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal"> Fechar </button>
+              </div>
+          </div>
+      </div>
   </div>
+
+  <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+          successModal.show();
+      });
+  </script>
 @endif
 
 
@@ -466,6 +486,7 @@ function buscarCEP(cep) {
           <h5 class="modal-title">Avalie sua experiência</h5>
         </div>
         <div class="modal-body text-center">
+          <p id="feedbackInfo" class="mb-3 text-muted"></p>
           <div id="estrelas" class="mb-3">
               @for ($i = 1; $i <= 5; $i++)
                   <i class="bi bi-star star" data-value="{{ $i }}"></i>
@@ -527,7 +548,18 @@ function buscarCEP(cep) {
             .then(response => response.json())
             .then(data => {
                 if (data.length > 0) {
-                    document.getElementById('idPropostaFeedback').value = data[0].id;
+                    const proposta = data[0];
+                    document.getElementById('idPropostaFeedback').value = proposta.id;
+
+                    // Preenche texto com nome artístico ou nome do contratante
+                    let texto = '';
+                    if (tipoUsuario === 3) {
+                        texto = `Avalie o artista "${proposta.artista.nome_artistico}" sobre a proposta "${proposta.titulo}" executada na data ${new Date(proposta.data).toLocaleDateString()}`;
+                    } else {
+                        texto = `Avalie o contratante "${proposta.usuario_avaliador.nome}" sobre a proposta "${proposta.titulo}" executada na data ${new Date(proposta.data).toLocaleDateString()}`;
+                    }
+
+                    document.getElementById('feedbackInfo').innerText = texto;
 
                     const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
                     modal.show();

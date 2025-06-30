@@ -46,10 +46,8 @@ public function feedbackArtista()
 // Feedback dado ao contratante (por artista)
 public function feedbackContratante()
 {
-    return $this->hasOne(FeedbackContratante::class, 'id_usuario_avaliador', 'id_usuario_avaliador')
-                ->whereHas('proposta', function ($q) {
-                    $q->whereColumn('id_usuario_avaliador', 'id_usuario_avaliador');
-                });
+    return $this->hasOne(FeedbackContratante::class, 'id_proposta');
 }
+
 
 }

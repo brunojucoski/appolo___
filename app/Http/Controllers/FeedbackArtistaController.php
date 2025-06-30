@@ -19,22 +19,35 @@ public function verificarPendentes()
 {
     $usuario = auth()->user();
 
-    // Garante que apenas contratantes (tipo_usuario == 3) acessem
     if (!$usuario || $usuario->tipo_usuario !== 3) {
         return response()->json([]);
     }
 
-    $propostas = \App\Models\PropostaContrato::where('id_usuario_avaliador', $usuario->id)
+    // Apenas para depuração: exibir ID do usuário
+    \Log::info('Verificando pendentes para contratante ID: ' . $usuario->id);
+
+    // Carrega todas as propostas finalizadas do contratante
+    $propostas = PropostaContrato::with('artista')
+        ->where('id_usuario_avaliador', $usuario->id)
         ->where('data', '<', now())
         ->where('status', 'Finalizada')
-        ->whereDoesntHave('feedbackArtista', function ($q) use ($usuario) {
-            $q->where('id_usuario_avaliador', $usuario->id);
-        })
         ->get();
 
-    return response()->json($propostas);
-}
+    \Log::info('Propostas encontradas: ' . $propostas->count());
 
+    // Filtra as que ainda **não têm feedback dado ao artista**
+    $pendentes = $propostas->filter(function ($proposta) use ($usuario) {
+        $temFeedback = \App\Models\FeedbackArtista::where('id_usuario_avaliador', $usuario->id)
+            ->where('id_artista', $proposta->id_artista)
+            ->exists();
+
+        \Log::info("Proposta ID {$proposta->id}: já tem feedback? " . ($temFeedback ? 'SIM' : 'NÃO'));
+
+        return !$temFeedback;
+    });
+
+    return response()->json($pendentes->values());
+}
 //  public function pendentes()
 //     {
 //         $user = Auth::user();
@@ -74,7 +87,7 @@ public function verificarPendentes()
             'comentario' => $request->comentario,
         ]);
 
-        return redirect()->back()->with('success', 'Feedback enviado com sucesso.');
+        return redirect()->back()->with('success', 'Feedback enviado com sucesso. Muito obrigado por contribuir com nossa comunidade ! ');
     }
 
     //
