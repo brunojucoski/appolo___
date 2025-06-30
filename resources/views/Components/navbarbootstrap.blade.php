@@ -415,7 +415,7 @@
     }
 
     // Chama a função carregarNotificacoes() no carregamento da página para garantir que os contadores estejam atualizados
-    document.addEventListener('DOMContentLoaded', carregarNotificacoes);
+//    document.addEventListener('DOMContentLoaded', carregarNotificacoes);
 </script>
 
 <script>
