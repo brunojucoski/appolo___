@@ -74,12 +74,19 @@
                     <p class="mb-0">
                         {{ $usuario->categoriasArtisticas->pluck('nome')->implode(', ') }}
                     </p>
-                    <div class="mt-1">
-                  
-                        <strong>5 </strong> ⭐ 
-                        
-                    </div>
-                </div>
+                        <div class="mt-1">
+                                @php
+                                    $feedbacks = $usuario->portfolioArtista->feedbacksRecebidos ?? collect();
+                                    $media = $feedbacks->avg('nota');
+                                @endphp
+
+                                @if($media)
+                                    <strong>{{ number_format($media, 1) }}</strong> ⭐ ({{ $feedbacks->count() }} avaliação{{ $feedbacks->count() > 1 ? 's' : '' }})
+                                @else
+                                    <em>Sem avaliações ainda</em>
+                                @endif
+                            </div>
+                        </div>
                 <div class="col-md-2 text-end">
                     <a href="{{ route('usuarios.perfilPublico', $usuario->id) }}" class="btn btn-purple btn-outline-custom">Ver perfil</a>
                 </div>

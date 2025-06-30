@@ -12,6 +12,7 @@
 
 @include('Components.navbarbootstrap')
 
+<body>
 <main class="cadastro-container ">
         <div class="left-illustration">
             <img src="{{ asset('imgs/cadastre.jpg') }}" alt="Ilustração Artista">
@@ -32,7 +33,7 @@
             <label for="senha">Senha : </label>
             <input type="password" name="password" placeholder="Senha" required>
 
-            <a href="#" style="color: #fff; font-size: 0.85rem;">Esqueceu a senha?</a>
+       
 
             <button type="submit" class="submit-btn">Fazer login</button>
         </form>
@@ -52,9 +53,8 @@
     </div>
 
 </main>
-
+</body>
     @include('Components.footer')
  
-     
 
 </html>

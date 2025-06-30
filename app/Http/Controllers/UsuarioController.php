@@ -227,6 +227,7 @@ public function listarPublico(Request $request)
 {
     $query = Usuario::where('tipo_usuario', 2)
         ->with(['categoriasArtisticas','portfolioArtista'])
+        
         ->whereNotNull('nome');
 
     if ($request->filled('categoria')) {

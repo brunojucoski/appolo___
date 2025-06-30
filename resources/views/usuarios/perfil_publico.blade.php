@@ -7,8 +7,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<main>
 @include('Components.navbarbootstrap')
+
+
+<main>
 
 
 
@@ -129,7 +131,18 @@
     <a href="{{$portfolio->link_behance ?? ''}}" class="text-primary fs-4 me-3" target="_blank">
       <i class="bi bi-link-45deg"></i>
     </a>
+<div class="mt-1">
+    @php
+        $feedbacks = $usuario->portfolioArtista->feedbacksRecebidos ?? collect();
+        $media = $feedbacks->avg('nota');
+    @endphp
 
+    @if($media)
+        <strong>{{ number_format($media, 1) }}</strong> ⭐ ({{ $feedbacks->count() }} avaliação{{ $feedbacks->count() > 1 ? 's' : '' }})
+    @else
+        <em>Sem avaliações ainda</em>
+    @endif
+</div>
 
 
 </div>

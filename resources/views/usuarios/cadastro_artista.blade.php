@@ -39,9 +39,7 @@
   </script>
 @endif
 
-@php
-    $portfolio = $usuario->portfolioArtista;
-@endphp
+
 
  
 @if ($errors->any())

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Appolo')</title>
-    <link  href="css/navbar.css" rel="stylesheet" />
+   
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 
@@ -42,131 +42,145 @@
 
 
 <nav class="navbar navbar-expand-lg fixed-top">
-  <div class="container-fluid">
-    <a class="navbar-brand me-auto " href={{ route('homepage') }}>Appolo</a>
-    
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-      <div class="offcanvas-header">
+    <div class="container-fluid">
+        <a class="navbar-brand me-auto" href="{{ route('homepage') }}">Appolo</a>
 
-        <a class="offcanvas-title" id="offcanvasNavbarLabel" href={{ route('homepage') }}style="text-decoration: none;"  > Appolo </a>
-
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div>
-      <div class="offcanvas-body">
-        <ul class="navbar-nav justify-content-left flex-grow-1 pe-3">
-  
-          <li class="nav-item">
-            <a class="nav-link mx-lg-2" aria-current="page" href="{{ route('usuarios.publico') }}">Artistas</a>
-          </li>
-
-          <li class="nav-item">
-            <a class="nav-link mx-lg-2" href="{{ route('usuarios.contratantes') }}">Solicitantes</a>
-          </li>
-
-          <li class="nav-item">
-            <a class="nav-link mx-lg-2" href="{{ route('sobrepage') }}">Sobre</a>
-          </li>
-
+        @if(auth()->check() && (auth()->user()->tipo_usuario == 2 || auth()->user()->tipo_usuario == 3))
+        <ul class="navbar-nav d-lg-none order-lg-last"> <li class="nav-item dropdown">
+                <a class="nav-link position-relative" href="#" id="notificacoesDropdownMobile" role="button" data-bs-toggle="dropdown" aria-expanded="false" onclick="carregarNotificacoes()">
+                    <i class="bi bi-bell fs-4"></i>
+                    @php
+                        $naoLidas = \App\Models\Notificacao::where('usuario_id', Auth::id())->where('lida', false)->count();
+                    @endphp
+                    @if($naoLidas > 0)
+                        <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-secondary" id="contadorNotificacoesMobile">
+                            {{ $naoLidas }}
+                        </span>
+                    @endif
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificacoesDropdownMobile" id="listaNotificacoesMobile">
+                    </ul>
+            </li>
         </ul>
-
- <div class="d-flex justify-content-end gap-2 mt-auto position-relative bottom-0 end-0 p-3">
-        
-  @php
-    $user = Auth::user();
-  @endphp
-
-@if(auth()->check() && (auth()->user()->tipo_usuario == 2 || auth()->user()->tipo_usuario == 3))
-<li class="dropdown dropleft" style="list-style: none;">
-    <a class="position-relative icon_nav" href="#" id="notificacoesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" onclick="carregarNotificacoes()">
-        <i class="bi bi-bell fs-4"></i>
-        @php
-            $naoLidas = \App\Models\Notificacao::where('usuario_id', Auth::id())->where('lida', false)->count();
-        @endphp
-        @if($naoLidas > 0)
-            <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-secondary" id="contadorNotificacoes">
-                {{ $naoLidas }}
-            </span>
         @endif
-    </a>
-    <ul class="dropdown-menu dropleft" aria-labelledby="notificacoesDropdown" id="listaNotificacoes">
-        @php
-            $notificacoes = \App\Models\Notificacao::where('usuario_id', Auth::id())->latest()->take(5)->get();
-        @endphp
-        @forelse($notificacoes as $notificacao)
-            <a href="{{ route('propostas.minhas') }}" class="dropdown-item">
-                {{ $notificacao->mensagem }}
-            </a>
-        @empty
-            <span class="dropdown-item text-muted">Sem notificações</span>
-        @endforelse
-    </ul>
-</li>
-@endif
-</div>
 
-        
-  <div class="d-flex justify-content-end gap-2 mt-auto position-relative bottom-0 end-0 p-3">
- 
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+            <div class="offcanvas-header">
+                <a class="offcanvas-title" id="offcanvasNavbarLabel" href="{{ route('homepage') }}" style="text-decoration: none;"> Appolo </a>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <ul class="navbar-nav justify-content-left flex-grow-1 pe-3">
+                    <li class="nav-item">
+                        <a class="nav-link mx-lg-2" aria-current="page" href="{{ route('usuarios.publico') }}">Artistas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link mx-lg-2" href="{{ route('usuarios.contratantes') }}">Solicitantes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link mx-lg-2" href="{{ route('sobrepage') }}">Sobre</a>
+                    </li>
+                </ul>
 
-  @auth
+                <ul class="navbar-nav d-none d-lg-flex ms-auto align-items-center">
+                    @auth
+                        @if(Auth::user()->tipo_usuario == 2 || Auth::user()->tipo_usuario == 3)
+                        <li class="nav-item dropdown me-2"> <a class="nav-link position-relative" href="#" id="notificacoesDropdownDesktop" role="button" data-bs-toggle="dropdown" aria-expanded="false" onclick="carregarNotificacoes()">
+                                <i class="bi bi-bell fs-4"></i>
+                                @php
+                                    $naoLidas = \App\Models\Notificacao::where('usuario_id', Auth::id())->where('lida', false)->count();
+                                @endphp
+                                @if($naoLidas > 0)
+                                    <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-secondary" id="contadorNotificacoesDesktop">
+                                        {{ $naoLidas }}
+                                    </span>
+                                @endif
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificacoesDropdownDesktop" id="listaNotificacoesDesktop">
+                                </ul>
+                        </li>
+                        @endif
 
-  <div class="actions d-flex gap-2">
-    @if(Auth::user()->tipo_usuario == 2)
-          <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#postModal">
-            <i class="bi bi-plus-circle"></i> Post
-          </button>
-          @endif
+                        @if(Auth::user()->tipo_usuario == 2)
+                      <li class="nav-item me-2">
+                          <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#postModal" data-bs-dismiss="offcanvas">
+                              <i class="bi bi-plus-circle"></i> Post
+                          </button>
+                      </li>
+                        @endif
+                        <li class="nav-item me-2"> <button class="btn btn-outline-custom" data-bs-toggle="offcanvas" data-bs-target="#editOffcanvas">
+                                <i class="bi bi-pencil"></i> Editar perfil
+                            </button>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <button class="btn btn-primary-custom dropdown-toggle" type="button" id="dropdownProfile" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ Auth::user()->nome }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownProfile">
+                                <li><a class="dropdown-item" href="{{ route('usuarios.perfilPublico', Auth::user()->id) }}">Perfil</a></li>
+                                <li><a class="dropdown-item" href="{{ route('propostas.minhas') }}">Minhas Propostas</a></li>
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button class="dropdown-item" type="submit">Sair</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    @else
+                        <li class="nav-item me-2"> <a class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#cadastroModal">Cadastrar-se</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary-custom" href="{{ route('login') }}">Entrar</a>
+                        </li>
+                    @endauth
+                </ul>
 
-
-
-          <button class="btn btn-outline-custom" data-bs-toggle="offcanvas" data-bs-target="#editOffcanvas">
-            <i class="bi bi-pencil"></i> Editar perfil
-          </button>
-
-  <div class="dropdown ms-3">
-    <button class="btn btn-primary-custom dropdown-toggle" type="button" id="dropdownProfile" data-bs-toggle="dropdown" aria-expanded="false">
-      {{ Auth::user()->nome }}
-    </button>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownProfile">
-    <li><a class="dropdown-item" href="{{ route('usuarios.perfilPublico', Auth::user()->id) }}">Perfil</a></li>
-    <li><a class="dropdown-item" href="{{ route('propostas.minhas') }}">Minhas Propostas</a></li>
-      <li>
-        <form action="{{ route('logout') }}" method="POST">
-          @csrf
-          <button class="dropdown-item" type="submit">Sair</button>
-        </form>
-      </li>
-    </ul>
-  </div>
-
- 
-
-@else
-  <li class="botao-nav" id="li-nav"><a class="btn btn-primary-custom ms-3" data-bs-toggle="modal" data-bs-target="#cadastroModal">Cadastrar-se</a></li>
-  <li class="botao-nav" id="li-nav"><a class="btn btn-primary-custom ms-3" href="{{ route('login') }}">Entrar</a></li>
-@endauth
-
-</div> 
-
-      </div>
+                <ul class="navbar-nav d-lg-none mt-3">
+                    @auth
+                        @if(Auth::user()->tipo_usuario == 2)
+                     <li class="nav-item mb-2">
+                          <button class="btn btn-primary-custom w-100" data-bs-toggle="modal" data-bs-target="#postModal" data-bs-dismiss="offcanvas">
+                              <i class="bi bi-plus-circle"></i> Post
+                          </button>
+                      </li>
+                        @endif
+                        <li class="nav-item mb-2">
+                            <button class="btn btn-outline-custom w-100" data-bs-toggle="offcanvas" data-bs-target="#editOffcanvas">
+                                <i class="bi bi-pencil"></i> Editar perfil
+                            </button>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <button class="btn btn-primary-custom dropdown-toggle w-100" type="button" id="dropdownProfileOffcanvas" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ Auth::user()->nome }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end w-100" aria-labelledby="dropdownProfileOffcanvas">
+                                <li><a class="dropdown-item" href="{{ route('usuarios.perfilPublico', Auth::user()->id) }}">Perfil</a></li>
+                                <li><a class="dropdown-item" href="{{ route('propostas.minhas') }}">Minhas Propostas</a></li>
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button class="dropdown-item" type="submit">Sair</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    @else
+                        <li class="nav-item mb-2">
+                            <a class="btn btn-primary-custom w-100" data-bs-toggle="modal" data-bs-target="#cadastroModal">Cadastrar-se</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary-custom w-100" href="{{ route('login') }}">Entrar</a>
+                        </li>
+                    @endauth
+                </ul>
+            </div>
+        </div>
     </div>
-
-    
-
-<button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
-  <span class="navbar-toggler-icon"></span>
-</button>
-
-<!-- 
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-</button> -->
-
-
-    
-
-  </div>
 </nav>
 
 
@@ -284,19 +298,6 @@
  
 
 
-  <script>
-    function previewImagem(event) {
-        const input = event.target;
-        const preview = document.getElementById('previewFotoPerfil');
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                preview.src = e.target.result;
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-</script>
 
   @auth
     @if(Auth::user()->tipo_usuario == 2)
@@ -355,31 +356,49 @@
 
 
 <script>
-function carregarNotificacoes() {
-    fetch('/notificacoes')
-        .then(response => response.json())
-        .then(data => {
-            const lista = document.getElementById('listaNotificacoes');
-            const contador = document.getElementById('contadorNotificacoes');
+    function carregarNotificacoes() {
+        fetch('/notificacoes')
+            .then(response => response.json())
+            .then(data => {
+                // Atualiza o dropdown de desktop
+                const listaDesktop = document.getElementById('listaNotificacoesDesktop');
+                const contadorDesktop = document.getElementById('contadorNotificacoesDesktop');
+                updateNotificationDropdown(listaDesktop, contadorDesktop, data);
 
-            lista.innerHTML = '';
+                // Atualiza o dropdown de mobile
+                const listaMobile = document.getElementById('listaNotificacoesMobile');
+                const contadorMobile = document.getElementById('contadorNotificacoesMobile');
+                updateNotificationDropdown(listaMobile, contadorMobile, data);
+            })
+            .catch(error => console.error("Erro ao buscar notificações:", error));
+    }
 
-            if (data.length === 0) {
-                lista.innerHTML = '<li class="dropdown-item text-muted">Nenhuma nova proposta</li>';
-                contador.style.display = 'none';
-                return;
+    // Função auxiliar para atualizar o conteúdo do dropdown
+    function updateNotificationDropdown(listaElement, contadorElement, notificacoesData) {
+        listaElement.innerHTML = ''; // Limpa o conteúdo atual
+
+        if (notificacoesData.length === 0) {
+            listaElement.innerHTML = '<li class="dropdown-item text-muted">Nenhuma nova proposta</li>';
+            if (contadorElement) { // Verifica se o contador existe
+                contadorElement.style.display = 'none';
             }
+            return;
+        }
 
-            contador.innerText = data.length;
-            contador.style.display = 'inline-block';
+        if (contadorElement) { // Verifica se o contador existe
+            contadorElement.innerText = notificacoesData.length;
+            contadorElement.style.display = 'inline-block';
+        }
 
-            data.forEach(notificacao => {
+        notificacoesData.forEach(notificacao => {
             const item = document.createElement('li');
-            item.className = 'dropdown-item';
-            item.textContent = `${notificacao.proposta.usuario_avaliador.nome} lhe enviou uma proposta de trabalho`;
-            item.style.cursor = 'pointer';
+            const link = document.createElement('a'); // Criar um <a> dentro do <li>
+            link.className = 'dropdown-item';
+            link.textContent = `${notificacao.proposta.usuario_avaliador.nome} lhe enviou uma proposta de trabalho`;
+            link.href = "{{ route('propostas.minhas') }}"; // Link para a página de propostas
 
-            item.addEventListener('click', () => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault(); // Evita a navegação imediata
                 fetch(`/notificacoes/${notificacao.id}/marcar-lida`, {
                     method: 'POST',
                     headers: {
@@ -387,17 +406,23 @@ function carregarNotificacoes() {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     },
                 }).then(() => {
-                    window.location.href = "{{ route('propostas.minhas') }}";
+                    window.location.href = "{{ route('propostas.minhas') }}"; // Redireciona após marcar como lida
                 });
             });
-
-    lista.appendChild(item);
-});
+            item.appendChild(link); // Adiciona o link ao item da lista
+            listaElement.appendChild(item);
         });
-}
+    }
+
+    // Chama a função carregarNotificacoes() no carregamento da página para garantir que os contadores estejam atualizados
+    document.addEventListener('DOMContentLoaded', carregarNotificacoes);
 </script>
 
 <script>
+    // scripts de CEP, telefone, preview de imagem, feedback, etc. ...
+
+
+
 document.addEventListener('DOMContentLoaded', function () {
     const cepInput = document.querySelector('input[name="cep"]');
     const telefoneInput = document.querySelector('input[name="telefone"]');
@@ -432,12 +457,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     telefoneInput.setAttribute('maxlength', '15'); // (00)00000-0000 tem 14 caracteres
 });
-</script>
 
 
-   
-<script>
+//preview imagem ao editar perfil 
 
+    function previewImagem(event) {
+        const input = event.target;
+        const preview = document.getElementById('previewFotoPerfil');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+
+//buscaCEP
 function buscarCEP(cep) {
 
     console.log(`https://viacep.com.br/ws/${cep}/json/`)
@@ -470,7 +507,10 @@ function buscarCEP(cep) {
 }
 
 
+
 </script>
+
+
 
 
 
@@ -514,6 +554,8 @@ function buscarCEP(cep) {
     color: #FFD700;
   }
 </style>
+
+
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -570,9 +612,11 @@ function buscarCEP(cep) {
 </script>
 @endauth
 
+
+
+
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </body> 
     </html> 
