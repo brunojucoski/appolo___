@@ -57,46 +57,54 @@
         </div>
     </form>
 
-    @foreach ($usuarios as $usuario)
-        <div class="card mb-4 p-3 shadow-sm ">
-            <div class="row align-items-center">
-                <div class="col-auto p-3 imagem-centralizada-mobile">
-                <img src="{{ $usuario->foto_perfil ? asset('storage/' . $usuario->foto_perfil) : asset('imgs/user.png') }}" class="rounded-circle" width="100" height="100">
-                </div>
-                <div class="col-md-8 p-3 ">
-                    <h5 class="text-nome" >{{ $usuario->nome }}    -      {{ $usuario->portfolioArtista->nome_artistico ?? '' }}           </h5>     
-              
+    <div id="lista-usuarios">
+    @include('partials.lista_usuarios', ['usuarios' => $usuarios])
+</div>
 
-                    <p class="mb-1">
-                        {{ \Carbon\Carbon::parse($usuario->data_nasc)->age }} anos<br>
-                        {{ $usuario->cidade ?? 'Cidade não informada' }}
-                    </p>
-                    <p class="mb-0">
-                        {{ $usuario->categoriasArtisticas->pluck('nome')->implode(', ') }}
-                    </p>
-                        <div class="mt-1">
-                                @php
-                                    $feedbacks = $usuario->portfolioArtista->feedbacksRecebidos ?? collect();
-                                    $media = $feedbacks->avg('nota');
-                                @endphp
-
-                                @if($media)
-                                    <strong>{{ number_format($media, 1) }}</strong> ⭐ ({{ $feedbacks->count() }} avaliação{{ $feedbacks->count() > 1 ? 's' : '' }})
-                                @else
-                                    <em>Sem avaliações ainda</em>
-                                @endif
-                            </div>
-                        </div>
-                <div class="col-md-2 text-end">
-                    <a href="{{ route('usuarios.perfilPublico', $usuario->id) }}" class="btn btn-purple btn-outline-custom">Ver perfil</a>
-                </div>
-            </div>
-        </div>
-    @endforeach
+<div class="text-center mt-4 p-3">
+    @if ($usuarios->hasMorePages())
+        <button id="load-more" class="btn btn-outline-custom" data-next-page="{{ $usuarios->currentPage() + 1 }}">
+            +
+        </button>
+    @endif
+</div>
+   
 </div>
 </div> 
 
 </main>
 
 @include('Components.footer')
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $('#load-more').on('click', function () {
+        var button = $(this);
+        var nextPage = button.data('next-page');
+        var url = "{{ route('usuarios.publico') }}" + '?page=' + nextPage;
+
+        // Adiciona filtros ativos na URL (se houver)
+        var form = $('#filtroForm');
+        var categoria = form.find('select[name="categoria"]').val();
+        var cidade = form.find('select[name="cidade"]').val();
+        if (categoria) url += '&categoria=' + categoria;
+        if (cidade) url += '&cidade=' + cidade;
+
+        $.get(url, function (data) {
+            $('#lista-usuarios').append(data);
+
+            // Atualiza número da próxima página
+            button.data('next-page', nextPage + 1);
+
+            // Se não tiver mais páginas, remove o botão
+            if (data.trim() === '') {
+                button.remove();
+            }
+        });
+    });
+</script>
+
+
+
 </body> 

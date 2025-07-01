@@ -277,7 +277,10 @@ public function listarPublico(Request $request)
         $query->where('cidade', 'like', '%' . $request->cidade . '%');
     }
 
-    $usuarios = $query->get();
+    $usuarios = $query->latest()->paginate(10);
+    if ($request->ajax()) {
+    return view('partials.lista_usuarios', compact('usuarios'))->render();
+}
     $categorias = CategoriaArtistica::all();
   
 

@@ -612,6 +612,13 @@ function buscarCEP(cep) {
 </script>
 @endauth
 
+<script>
+  document.addEventListener('hidden.bs.modal', function () {
+      // Força a remoção de "overflow: hidden" do body
+      document.body.style.overflow = 'auto';
+  });
+</script>
+
 
 
 
