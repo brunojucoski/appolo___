@@ -302,7 +302,7 @@ public function listarContratantes(Request $request)
             $query->where('cidade', $request->cidade);
         })
         ->orderBy('created_at', 'desc')
-        ->paginate(2);
+        ->paginate(5);
 
     if ($request->ajax()) {
         return response()->json([
