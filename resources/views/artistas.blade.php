@@ -28,48 +28,48 @@
 
 
 <div class="container-listagem d-flex"> 
-<link rel="stylesheet" href="{{ asset('css/usuarios_publicos.css') }}"> {{-- opcional --}}
+        <link rel="stylesheet" href="{{ asset('css/usuarios_publicos.css') }}"> {{-- opcional --}}
 
-<div class="container mt-5">
-    <form method="GET" action="{{ route('usuarios.publico') }}" class="row mb-4 " id="filtroForm">
-       
-    
-    <div class="col-md-5 w-50">
-            <select name="categoria" class="form-control" onchange="document.getElementById('filtroForm').submit();">
-                <option value="">Todas as categorias</option>
-                @foreach($categorias as $categoria)
-                    <option value="{{ $categoria->id }}" {{ request('categoria') == $categoria->id ? 'selected' : '' }}>
-                        {{ $categoria->nome }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+    <div class="container mt-5">
+            <form method="GET" action="{{ route('usuarios.publico') }}" class="row mb-4 " id="filtroForm">
+            
+            
+                <div class="col-md-5 w-50">
+                    <select name="categoria" class="form-control" onchange="document.getElementById('filtroForm').submit();">
+                        <option value="">Todas as categorias</option>
+                        @foreach($categorias as $categoria)
+                            <option value="{{ $categoria->id }}" {{ request('categoria') == $categoria->id ? 'selected' : '' }}>
+                                {{ $categoria->nome }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-        <div class="col-md-5 w-50">
-            <select name="cidade" class="form-control" onchange="document.getElementById('filtroForm').submit();">
-                <option value="">Todas as cidades</option>
-                @foreach($cidades as $cidade)
-                    <option value="{{ $cidade }}" {{ request('cidade') == $cidade ? 'selected' : '' }}>
-                        {{ $cidade }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-    </form>
+                <div class="col-md-5 w-50">
+                    <select name="cidade" class="form-control" onchange="document.getElementById('filtroForm').submit();">
+                        <option value="">Todas as cidades</option>
+                        @foreach($cidades as $cidade)
+                            <option value="{{ $cidade }}" {{ request('cidade') == $cidade ? 'selected' : '' }}>
+                                {{ $cidade }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </form>
 
-    <div id="lista-usuarios">
-    @include('partials.lista_usuarios', ['usuarios' => $usuarios])
-</div>
+                    <div id="lista-usuarios">
+                        @include('partials.lista_usuarios', ['usuarios' => $usuarios])
+                    </div>
 
-<div class="text-center mt-4 p-3">
-    @if ($usuarios->hasMorePages())
-        <button id="load-more" class="btn btn-outline-custom" data-next-page="{{ $usuarios->currentPage() + 1 }}">
-            +
-        </button>
-    @endif
-</div>
-   
-</div>
+                <div class="text-center mt-4 p-3">
+                    @if ($usuarios->hasMorePages())
+                        <button id="load-more" class="btn btn-outline-custom" data-next-page="{{ $usuarios->currentPage() + 1 }}">
+                            +
+                        </button>
+                    @endif
+                </div>
+        
+    </div>
 </div> 
 
 </main>

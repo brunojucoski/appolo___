@@ -277,7 +277,7 @@ public function listarPublico(Request $request)
         $query->where('cidade', 'like', '%' . $request->cidade . '%');
     }
 
-    $usuarios = $query->latest()->paginate(10);
+    $usuarios = $query->latest()->paginate(5);
     if ($request->ajax()) {
     return view('partials.lista_usuarios', compact('usuarios'))->render();
 }
@@ -301,7 +301,15 @@ public function listarContratantes(Request $request)
         ->when($request->cidade, function ($query) use ($request) {
             $query->where('cidade', $request->cidade);
         })
-        ->get();
+        ->orderBy('created_at', 'desc')
+        ->paginate(2);
+
+    if ($request->ajax()) {
+        return response()->json([
+            'html' => view('partials.lista_contratantes', compact('usuarios'))->render(),
+            'next_page_url' => $usuarios->nextPageUrl()
+        ]);
+    }
 
     $cidades = Usuario::where('tipo_usuario', 3)
         ->whereNotNull('cidade')
@@ -312,7 +320,6 @@ public function listarContratantes(Request $request)
 
     return view('contratantes', compact('usuarios', 'cidades'));
 }
-
     //editar e add foto de perfil 
     
     
