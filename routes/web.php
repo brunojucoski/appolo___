@@ -113,6 +113,8 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/posts', [PostPortfolioController::class, 'store'])->name('posts.store');
+    Route::put('/posts/{post}', [PostPortfolioController::class, 'update'])->name('posts.update'); 
+    Route::delete('/posts/{post}', [PostPortfolioController::class, 'destroy'])->name('posts.destroy'); 
 });
 
 //proposta de trampo

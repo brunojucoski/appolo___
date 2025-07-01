@@ -80,6 +80,24 @@ public function categoriasArtisticas()
 }
 
 
+ public function todosFeedbacksRecebidosArtista()
+    {
+        return $this->hasManyThrough(
+            FeedbackArtista::class,     
+            PortfolioArtista::class,    
+            'id_usuario',               
+            'id_artista',               
+            'id',                        
+            'id'                       
+        );
+    }
+    
+   public function todosFeedbacksRecebidosContratante()
+    {
+       
+        return $this->hasMany(FeedbackContratante::class, 'id_usuario');
+    }
+
 public function notificacoes()
 {
     return $this->hasMany(Notificacao::class);

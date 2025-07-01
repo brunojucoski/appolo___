@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\CategoriaArtistica;
 use App\Models\SexoUsuario;
-
-
+use App\Models\FeedbackArtista;
+use App\Models\FeedbackContratante;
 
 
 class UsuarioController extends Controller
@@ -101,24 +101,60 @@ class UsuarioController extends Controller
 
 
 
-    
-    public function showPerfilPublico($id)
+     public function showPerfilPublico($id)
     {
-        
-        $usuario = Usuario::with('portfolioArtista.posts.imagens', 'categoriasArtisticas')->findOrFail($id);
+        // Carrega o usuário e todos os relacionamentos necessários para a página.
+        // Incluímos 'todosFeedbacksRecebidosArtista.avaliador' e 'todosFeedbacksRecebidosContratante.avaliador'
+        // para buscar *todos* os feedbacks e os dados dos avaliadores em uma única consulta otimizada.
+        $usuario = Usuario::with([
+            'portfolioArtista.posts.imagens', // Mantém este relacionamento, importante para o portfolio e posts
+            'categoriasArtisticas',
+            'todosFeedbacksRecebidosArtista.avaliador',        // Carrega feedbacks de artistas e seus avaliadores
+            'todosFeedbacksRecebidosContratante.avaliador'     // Carrega feedbacks de contratantes e seus avaliadores
+        ])->findOrFail($id);
+
+        // --- PREPARAÇÃO DOS DADOS DE FEEDBACK PARA A VIEW ---
+        // Inicializa as coleções de feedbacks que serão usadas no Blade
+        $feedbacksParaMedia = collect(); // Vai conter TODOS os feedbacks para cálculo da média
+        $feedbacksParaLista = collect(); // Vai conter apenas os 3 últimos para a lista
+
+        // Lógica condicional para popular as coleções de feedback baseada no tipo de usuário do PERFIL que está sendo visitado
+        if ($usuario->tipo_usuario == 2) { // Se o perfil é de um ARTISTA
+            $feedbacksParaMedia = $usuario->todosFeedbacksRecebidosArtista;
+            $feedbacksParaLista = $usuario->todosFeedbacksRecebidosArtista->sortByDesc('created_at')->take(3);
+        } elseif ($usuario->tipo_usuario == 3) { // Se o perfil é de um CONTRATANTE
+            $feedbacksParaMedia = $usuario->todosFeedbacksRecebidosContratante;
+            $feedbacksParaLista = $usuario->todosFeedbacksRecebidosContratante->sortByDesc('created_at')->take(3);
+        }
+        // Se houver outros tipos de usuário que recebem feedback, adicione mais 'else if' aqui.
+        // Se um tipo de usuário não recebe feedback, $feedbacksParaMedia e $feedbacksParaLista permanecerão como 'collect()' vazio.
+
+
+        // --- PREPARAÇÃO DE OUTRAS VARIÁVEIS PARA A VIEW (SEU CÓDIGO EXISTENTE) ---
+        // Garante que 'posts' e 'portfolio' existam mesmo se o portfólio for nulo
         $posts = $usuario->portfolioArtista->posts ?? collect();
-    
         $portfolio = $usuario->portfolioArtista; 
 
+        // Carrega categorias e gêneros (se ainda não estiverem carregadas via eager loading no `Usuario::with`)
         $categorias = CategoriaArtistica::all();
         $categoriasSelecionadas = $usuario->categoriasArtisticas->pluck('id')->toArray();
-
         $generos = SexoUsuario::all();
         
-
-            return view('usuarios.perfil_publico', compact('usuario', 'posts', 'categorias', 'categoriasSelecionadas', 'portfolio' ,'generos'));
-    
+        // Retorna a view com todas as variáveis necessárias
+        return view('usuarios.perfil_publico', compact(
+            'usuario',
+            'posts',
+            'categorias',
+            'categoriasSelecionadas',
+            'portfolio',
+            'generos',
+            'feedbacksParaMedia', // Variável para a média (contém TODOS os feedbacks)
+            'feedbacksParaLista'  // Variável para a lista (contém os 3 últimos feedbacks)
+        ));
     }
+
+
+
 
 
     public function showshowPublic($id)

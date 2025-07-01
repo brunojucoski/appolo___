@@ -19,4 +19,19 @@ class FeedbackContratante extends Model
         'comentario',
     ];
 
+        public function contratante()
+    {
+        return $this->belongsTo(Usuario::class, 'id_usuario');
+    }
+
+   
+    public function avaliador()
+    {
+        return $this->belongsTo(Usuario::class, 'id_usuario_avaliador');
+    }
+
+    public function proposta()
+    {
+        return $this->belongsTo(PropostaContrato::class, 'id_proposta');
+    }
 }

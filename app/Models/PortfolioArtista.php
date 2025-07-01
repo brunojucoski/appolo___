@@ -31,6 +31,12 @@ class PortfolioArtista extends Model
     return $this->hasMany(PostPortfolio::class, 'id_portfolio')->orderBy('created_at', 'desc');
 }
 
+   public function feedbacks() 
+    {
+        
+        return $this->hasMany(FeedbackArtista::class, 'id_artista');
+    }
+
 public function feedbacksRecebidos()
 {
     return $this->hasMany(\App\Models\FeedbackArtista::class, 'id_artista');

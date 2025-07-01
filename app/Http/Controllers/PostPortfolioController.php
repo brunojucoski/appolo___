@@ -21,7 +21,7 @@ class PostPortfolioController extends Controller
 
     public function __construct()
 {
-    $this->middleware('auth')->only(['store', 'create', 'edit']);
+    $this->middleware('auth')->only(['store', 'create', 'edit', 'update', 'destroy']);
 }
 
 
@@ -84,16 +84,96 @@ class PostPortfolioController extends Controller
     return view('posts.create');
 }
 
-public function edit($id)
-{
-    $post = PostPortfolio::findOrFail($id);
+   public function edit($id)
+    {
+        $post = PostPortfolio::with('imagens')->findOrFail($id); // Carrega as imagens do post
 
-    if ($post->usuario_id !== auth()->id()) {
-        abort(403, 'Você não tem permissão para editar este post.');
+        // Verifica se o usuário logado é o dono do portfólio ao qual o post pertence
+        if (Auth::id() !== $post->portfolio->id_usuario) {
+            abort(403, 'Você não tem permissão para editar este post.');
+        }
+
+        // Esta view 'posts.edit' é para um formulário de edição completo,
+        // mas no seu caso, usaremos uma modal na perfil_publico.blade.php.
+        // Este método 'edit' pode não ser estritamente necessário se a modal for preenchida via JS.
+        // No entanto, é bom tê-lo para uma rota de edição caso precise de uma página dedicada.
+        return view('posts.edit', compact('post'));
     }
 
-    return view('posts.edit', compact('post'));
-}
+    /**
+     * Atualiza um post de portfólio existente.
+     */
+    public function update(Request $request, $id)
+    {
+        $post = PostPortfolio::findOrFail($id);
 
+        // Autorização: Apenas o dono do portfólio pode editar o post
+        if (Auth::id() !== $post->portfolio->id_usuario) {
+            abort(403, 'Você não tem permissão para atualizar este post.');
+        }
+
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'descricao' => 'required|string|max:1000',
+            'imagens.*' => 'nullable|image|max:2048', // Permite novas imagens, mas são opcionais
+            'imagens_para_remover' => 'nullable|array', // Array de IDs de imagens a serem removidas
+            'imagens_para_remover.*' => 'exists:post_imagens,id', // Valida se os IDs existem na tabela
+        ]);
+
+        // Atualiza os campos de texto do post
+        $post->update([
+            'nome' => $request->nome,
+            'descricao' => $request->descricao,
+        ]);
+
+        // 1. Remover imagens existentes (se IDs foram enviados para remoção)
+        if ($request->has('imagens_para_remover')) {
+            $imagensParaRemover = $request->input('imagens_para_remover');
+            foreach ($imagensParaRemover as $imagemId) {
+                $imagem = PostImagem::find($imagemId);
+                if ($imagem && $imagem->post_id === $post->id) { // Garante que a imagem pertence a este post
+                    Storage::disk('public')->delete($imagem->caminho_imagem); // Deleta do storage
+                    $imagem->delete(); // Deleta do banco de dados
+                }
+            }
+        }
+
+        // 2. Adicionar novas imagens (se foram enviadas)
+        if ($request->hasFile('imagens')) {
+            foreach ($request->file('imagens') as $imagemFile) {
+                $caminho = $imagemFile->store('posts', 'public'); // Salva no storage
+                PostImagem::create([
+                    'post_id' => $post->id,
+                    'caminho_imagem' => $caminho,
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Post atualizado com sucesso!');
+    }
+
+    /**
+     * Remove um post de portfólio.
+     */
+    public function destroy($id)
+    {
+        $post = PostPortfolio::findOrFail($id);
+
+        // Autorização: Apenas o dono do portfólio pode apagar o post
+        if (Auth::id() !== $post->portfolio->id_usuario) {
+            abort(403, 'Você não tem permissão para apagar este post.');
+        }
+
+        // 1. Deletar imagens associadas do storage e do banco de dados
+        foreach ($post->imagens as $imagem) {
+            Storage::disk('public')->delete($imagem->caminho_imagem); // Deleta do storage
+            $imagem->delete(); // Deleta do banco de dados (o relacionamento 'imagens' pode ter cascade, mas é mais seguro fazer manualmente)
+        }
+
+        // 2. Deletar o post em si
+        $post->delete();
+
+        return redirect()->back()->with('success', 'Post apagado com sucesso!');
+    }
 
 }
