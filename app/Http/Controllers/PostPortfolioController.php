@@ -117,7 +117,7 @@ class PostPortfolioController extends Controller
             'descricao' => 'required|string|max:1000',
             'imagens.*' => 'nullable|image|max:2048', // Permite novas imagens, mas são opcionais
             'imagens_para_remover' => 'nullable|array', // Array de IDs de imagens a serem removidas
-            'imagens_para_remover.*' => 'exists:post_imagens,id', // Valida se os IDs existem na tabela
+            'imagens_para_remover.*' => 'exists:posts_imgs,id', // Valida se os IDs existem na tabela
         ]);
 
         // Atualiza os campos de texto do post
