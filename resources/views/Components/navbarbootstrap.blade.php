@@ -19,7 +19,7 @@
       <div class="modal-dialog">
           <div class="modal-content">
               <div class="modal-header">
-                  <h5 class="text-nome" id="successModalLabel"> APPOLO </h5>
+                  <h5 class="text-nome" id="successModalLabel"> MeuPortfólio </h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
@@ -43,7 +43,7 @@
 
 <nav class="navbar navbar-expand-lg fixed-top">
     <div class="container-fluid">
-        <a class="navbar-brand me-auto" href="{{ route('homepage') }}">Appolo</a>
+        <a class="navbar-brand me-auto" href="{{ route('homepage') }}">MeuPortfólio</a>
 
         @if(auth()->check() && (auth()->user()->tipo_usuario == 2 || auth()->user()->tipo_usuario == 3))
         <ul class="navbar-nav d-lg-none order-lg-last"> <li class="nav-item dropdown">
@@ -70,7 +70,7 @@
 
         <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
             <div class="offcanvas-header">
-                <a class="offcanvas-title" id="offcanvasNavbarLabel" href="{{ route('homepage') }}" style="text-decoration: none;"> Appolo </a>
+                <a class="offcanvas-title" id="offcanvasNavbarLabel" href="{{ route('homepage') }}" style="text-decoration: none;"> MeuPortfólio </a>
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body">
