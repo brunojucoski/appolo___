@@ -5,8 +5,8 @@
 
 
 :root {
-    --roxo-appolo: #7700ff;
-    --roxo-claro: #9f58ff;
+    --roxo-appolo: #7d58b9;
+    --roxo-claro: #997ebd;
     --branco: #fff;
     --preto: #000000;
     --cinza-claro: #f5f5f5;
@@ -97,7 +97,7 @@ form input[type="password"] {
     padding: 14px;
     font-size: 16px;
     background: white;
-    color: #8000ff;
+    color: var(--roxo-appolo);
     border: none;
     border-radius: 20px;
     cursor: pointer;
@@ -108,7 +108,7 @@ form input[type="password"] {
 
 .submit-btn:hover {
     color: #eee8f7 !important;
-    background: #9357cf;
+    background:var(--roxo-appolo);
     border: var(--branco) !important;
 }
 
@@ -134,7 +134,7 @@ form input[type="password"] {
 
 .cadastro-button:hover {
     color: #eee8f7 !important;
-    background: #9357cf;
+    background: var(--roxo-claro);
     border: var(--branco) !important;
 }
 
@@ -176,7 +176,7 @@ form input[type="password"] {
 }
 
 .navbar-brand {
-    color : #4d2d77 !important; 
+    color : var(--roxo-appolo) !important; 
     font-family: 'Medula one' !important ;
     font-size: 4rem !important;
     border-left: 100px !important;
@@ -185,11 +185,11 @@ form input[type="password"] {
 }
 
 .navbar-brand:hover {
-    color: #7e54b4 !important;
+    color: var(--roxo-appolo)!important;
 }
 
 .login-button { 
-    background-color: #9b63e4 !important;
+    background-color:var(--roxo-claro)!important;
     color: antiquewhite !important;
     font-size: 15px !important;
     padding: 8px 20px !important;
@@ -200,7 +200,7 @@ form input[type="password"] {
 }
 
 .login-button:hover {
-    background-color: #ab7aeb !important;
+    background-color:var(--roxo-claro) !important;
 }
 
 .navbar-toggler {
@@ -226,15 +226,15 @@ form input[type="password"] {
 } */
 
 .text-purple {
-    color: #8000ff;
+    color: var(--roxo-appolo);
 }
 
 .bg-purple {
-    background-color: #8000ff;
+    background-color: var(--roxo-appolo);;
 }
 
 .btn-purple {
-    background-color: #8000ff;
+    background-color: var(--roxo-appolo);;
     color: #fff;
     border-radius: 25px;
     padding: 8px 20px;
@@ -243,7 +243,7 @@ form input[type="password"] {
 }
 
 .btn-purple:hover {
-    background-color: #6b00cc;
+    background-color:var(--roxo-appolo);;
     color: white;
 }
 
@@ -254,7 +254,7 @@ form input[type="password"] {
 
 
 .offcanvas-title {
-    color : #7000FF; 
+    color : var(--roxo-appolo);; 
     font-family: 'Medula one' !important ;
     font-size: 2.5rem !important;
     border-left: 100px !important;
@@ -263,7 +263,7 @@ form input[type="password"] {
 
 
 .btn-outline-custom {
-    border: 2px solid #7000FF !important;
+    border: 2px solid var(--roxo-appolo) !important;
     color: var(--roxo-appolo) !important;
     border-radius: 20px !important;
     padding: 6px 18px !important;
@@ -271,12 +271,12 @@ form input[type="password"] {
   }
   
   .btn-outline-custom:hover {
-    background-color: #7000FF !important;
+    background-color:var(--roxo-appolo)!important;
     color: var(--branco) !important;
   }
   
   .btn-primary-custom {
-    background-color: #7000FF !important;
+    background-color: var(--roxo-appolo)!important;
     border: none !important;
     color: white !important;
     border-radius: 20px !important;

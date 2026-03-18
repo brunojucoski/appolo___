@@ -3,8 +3,8 @@
 
 
 :root {
-    --roxo-appolo: #7700ff;
-    --roxo-claro: #9f58ff;
+    --roxo-appolo: #7d58b9;
+    --roxo-claro: #997ebd;
     --branco: #fff;
     --preto: #000000;
     --cinza-claro: #f5f5f5;
@@ -24,7 +24,7 @@
 }
 
 .navbar-brand {
-    color : #7000FF !important; 
+    color :var(--roxo-appolo)!important; 
     font-family: 'Medula one' !important ;
     font-size: 4rem !important;
     border-left: 100px !important;
@@ -33,11 +33,11 @@
 }
 
 .navbar-brand:hover {
-    color: #7e54b4 !important;
+    color: var(--roxo-claro)!important;
 }
 
 .login-button { 
-    background-color: #9b63e4 !important;
+    background-color: var(--roxo-claro)!important;
     color: antiquewhite !important;
     font-size: 15px !important;
     padding: 8px 20px !important;
@@ -48,7 +48,7 @@
 }
 
 .login-button:hover {
-    background-color: #ab7aeb !important;
+    background-color:var(--roxo-appolo)  !important;
 }
 
 .navbar-toggler {
@@ -84,7 +84,7 @@
 } */
 
 .offcanvas-title {
-    color : #7000FF; 
+    color : var(--roxo-appolo); 
     font-family: 'Medula one' !important ;
     font-size: 2.5rem !important;
     border-left: 100px !important;
@@ -103,7 +103,7 @@
 
 
 .btn-outline-custom {
-    border: 2px solid #7000FF !important;
+    border: 2px solid var(--roxo-appolo) !important;
     color: var(--roxo-appolo) !important;
     border-radius: 20px !important;
     padding: 6px 18px !important;
@@ -111,12 +111,12 @@
   }
   
   .btn-outline-custom:hover {
-    background-color: #7000FF !important;
+    background-color: var(--roxo-appolo) !important;
     color: var(--branco) !important;
   }
   
   .btn-primary-custom {
-    background-color: #7000FF !important;
+        background-color: var(--roxo-appolo) !important;
     border: none !important;
     color: white !important;
     border-radius: 20px !important;
@@ -193,7 +193,7 @@
     .navbar-brand {
         padding: 5px !important;
         padding-left: 20px !important;
-       color: rgb(152, 128, 172) !important;
+       color: var(--roxo-appolo) !important;
     }
 
     
