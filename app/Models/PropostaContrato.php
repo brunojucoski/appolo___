@@ -16,14 +16,11 @@ class PropostaContrato extends Model
     protected $fillable = [
         'id_artista',
         'id_usuario_avaliador',
-        'titulo',
-        'descricao',
-        'data',
         'status',
         'motivo',
     ];
 
-    protected $dates = ['data', 'deleted_at'];
+    protected $dates = ['deleted_at'];
 
     public function artista()
     {
@@ -44,10 +41,25 @@ public function feedbackArtista()
 }
 
 // Feedback dado ao contratante (por artista)
-public function feedbackContratante()
+    public function feedbackContratante()
 {
     return $this->hasOne(FeedbackContratante::class, 'id_proposta');
 }
 
+    /** Feedback do contratante sobre o artista (uma proposta → um registro). */
+    public function feedbackArtistaNaProposta()
+    {
+        return $this->hasOne(FeedbackArtista::class, 'id_proposta');
+    }
+
+    public function respostasPergunta()
+    {
+        return $this->hasMany(RespostaPropostaPergunta::class, 'id_proposta');
+    }
+
+    public function timeline()
+    {
+        return $this->hasMany(TimelinePropostaContrato::class, 'id_proposta')->orderBy('created_at')->orderBy('id');
+    }
 
 }

@@ -10,7 +10,7 @@
       <i class="bi bi-linkedin fs-4"></i>
     </div>
     <p class="small mb-0 text-white">
-      &copy; 2025 Appolo - Todos os direitos reservados.
+      &copy; 2025 MeuPortfólio - Todos os direitos reservados.
     </p>
   </footer>
 

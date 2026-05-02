@@ -58,7 +58,7 @@
       <div class="modal-dialog">
           <div class="modal-content">
               <div class="modal-header">
-                  <h5 class="text-nome" id="successModalLabel"> APPOLO </h5>
+                  <h5 class="text-nome" id="successModalLabel"> MeuPortfólio </h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
@@ -95,12 +95,19 @@
 
 
     <div class="container my-5">
-        <h2 class="mb-4 botao_home" style="text-transform: uppercase;">Minhas Propostas</h2>
+        <h2 class="mb-4 botao_home" style="text-transform: uppercase;">Meus orçamentos</h2>
 
 
         
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
     {{-- Filtros --}}
-  <form method="GET" action="{{ route('propostas.minhas') }}" class="row g-3 mb-4">
+  <form id="formFiltrosPropostas" method="GET" action="{{ route('propostas.minhas') }}" class="row g-3 mb-4">
     <div class="col-md-4">
         <label for="status" class="form-label">Status da Proposta</label>
         <select name="status" id="status" class="form-select">
@@ -143,17 +150,37 @@
         @else
             @foreach($propostas as $proposta)
                 <div class="card-proposta">
-                    <h5>{{ $proposta->titulo }}</h5>
-                    <p><strong>Descrição:</strong> {{ $proposta->descricao }}</p>
-                    <p><strong>Data do serviço:</strong> {{ \Carbon\Carbon::parse($proposta->data)->format('d/m/Y') }}</p>
+                    <h5>Proposta #{{ $proposta->id }}</h5>
+                    <p class="text-muted small mb-2">Enviada em {{ $proposta->created_at->format('d/m/Y H:i') }}</p>
                     <p><strong>Status:</strong> <span class="status-label">{{ $proposta->status }}</span></p>
 
                     @if($proposta->motivo)
-                        <p><strong>Motivo:</strong> {{ $proposta->motivo }}</p>
+                        <p><strong>Motivo / observações (resposta do artista):</strong> {{ $proposta->motivo }}</p>
+                    @endif
+
+                    @if($proposta->respostasPergunta->isNotEmpty())
+                        <div class="mt-3">
+                            <strong>Respostas do solicitante:</strong>
+                            <ul class="list-unstyled small mt-2 mb-0">
+                                @foreach($proposta->respostasPergunta as $resp)
+                                    <li class="mb-2 border-start border-3 ps-2">
+                                        <span class="text-muted">{{ $resp->pergunta?->titulo ?? 'Pergunta removida' }}</span>
+                                        @if($resp->pergunta && $resp->pergunta->tipo === 'texto')
+                                            <div>{{ $resp->texto_resposta }}</div>
+                                        @elseif($resp->pergunta && $resp->pergunta->tipo === 'opcoes')
+                                            @php $opts = $resp->pergunta->opcoesList(); @endphp
+                                            <div>{{ isset($opts[$resp->indice_opcao]) ? $opts[$resp->indice_opcao] : '—' }}</div>
+                                        @elseif($resp->pergunta && $resp->pergunta->tipo === 'anexo' && $resp->caminho_anexo)
+                                            <div><a href="{{ asset('storage/' . $resp->caminho_anexo) }}" target="_blank" rel="noopener">Baixar anexo</a></div>
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
                     @endif
 
                     @if($usuario->tipo_usuario == 2)
-                        <p><strong>Solicitante:</strong> {{ $proposta->usuarioAvaliador->nome ?? 'Desconhecido' }}</p>
+                        <p class="mt-2"><strong>Solicitante:</strong> {{ $proposta->usuarioAvaliador->nome ?? 'Desconhecido' }}</p>
 
                         @if($proposta->status === 'Aguardando resposta')
                             <button type="button" class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#responderModal{{ $proposta->id }}">
@@ -161,8 +188,51 @@
                             </button>
                         @endif
                     @else
-                        <p><strong>Artista:</strong> {{ $proposta->artista->usuario->nome ?? 'Desconhecido' }}</p>
+                        <p class="mt-2"><strong>Artista:</strong> {{ $proposta->artista->usuario->nome ?? 'Desconhecido' }}</p>
                     @endif
+
+                    <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#timelineModal{{ $proposta->id }}">
+                            <i class="bi bi-chat-left-text"></i> Ver timeline
+                        </button>
+                        @if($usuario->tipo_usuario == 2 && $proposta->status === 'Aguardando execução')
+                            <form action="{{ route('propostas.finalizar', $proposta) }}" method="POST" class="d-inline" onsubmit="return confirm('Marcar esta proposta como concluída? O solicitante será notificado e poderá enviar feedback.');">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-custom btn-sm">Marcar como concluída</button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="modal fade" id="timelineModal{{ $proposta->id }}" tabindex="-1" aria-labelledby="timelineModalLabel{{ $proposta->id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="timelineModalLabel{{ $proposta->id }}">Timeline — Proposta #{{ $proposta->id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-4" style="max-height: 320px; overflow-y: auto;">
+                                    @forelse($proposta->timeline as $ev)
+                                        <p class="small mb-2 border-bottom pb-2 text-start">{{ $ev->linhaDescritiva() }}</p>
+                                    @empty
+                                        <p class="text-muted small">Nenhum registro ainda.</p>
+                                    @endforelse
+                                </div>
+                                @if($proposta->status !== 'Recusada')
+                                    <hr>
+                                    <form action="{{ route('propostas.timeline.store', $proposta) }}" method="POST">
+                                        @csrf
+                                        <label class="form-label small fw-semibold">Nova mensagem na timeline</label>
+                                        <textarea name="mensagem" class="form-control mb-2" rows="3" required maxlength="2000" placeholder="Comunique-se com o artista ou o solicitante..."></textarea>
+                                        <button type="submit" class="btn btn-outline-custom btn-sm">Enviar mensagem</button>
+                                    </form>
+                                @else
+                                    <p class="text-muted small mb-0">Proposta recusada — apenas leitura.</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 @if($usuario->tipo_usuario == 2 && $proposta->status === 'Aguardando resposta')
@@ -203,10 +273,9 @@
     <script>
            
         document.addEventListener('DOMContentLoaded', function () {
-        const form = document.querySelector('form');
-        const selects = form.querySelectorAll('select');
-
-        selects.forEach(select => {
+        const form = document.getElementById('formFiltrosPropostas');
+        if (!form) return;
+        form.querySelectorAll('select').forEach(select => {
             select.addEventListener('change', function () {
                 form.submit();
             });

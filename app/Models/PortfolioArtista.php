@@ -31,6 +31,20 @@ class PortfolioArtista extends Model
     return $this->hasMany(PostPortfolio::class, 'id_portfolio')->orderBy('created_at', 'desc');
 }
 
+    public function categoriasPostsPortfolio()
+    {
+        return $this->hasMany(CategoriaPostPortfolio::class, 'id_portfolio_artista')
+            ->orderBy('ordem')
+            ->orderBy('nome');
+    }
+
+    public function perguntasPropostaContrato()
+    {
+        return $this->hasMany(PerguntaPropostaContrato::class, 'id_portfolio_artista')
+            ->orderBy('ordem')
+            ->orderBy('id');
+    }
+
    public function feedbacks() 
     {
         

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\PostPortfolio;
 use App\Models\PostImagem;
+use App\Models\CategoriaPostPortfolio;
 use App\Models\TipoUsuario;
 use App\Models\PortfolioArtista;
 use Illuminate\Support\Facades\Auth;
@@ -46,12 +47,24 @@ class PostPortfolioController extends Controller
              return back()->with('error', 'Você precisa ter um portfólio antes de postar.');
          }
 
-        
+        if ($request->input('id_categoria_post_portfolio') === '' || $request->input('id_categoria_post_portfolio') === null) {
+            $request->merge(['id_categoria_post_portfolio' => null]);
+        }
+
         $request->validate([
             'nome' => 'required|string|max:255',
             'descricao' => 'required|string|max:1000',
-            'imagens.*' => 'image|max:2048'
+            'imagens.*' => 'file|mimes:jpeg,jpg,png,gif|max:8192',
+            'id_categoria_post_portfolio' => 'nullable|integer|exists:categorias_posts_portfolio,id',
         ]);
+
+        $idCategoria = $request->input('id_categoria_post_portfolio');
+        if ($idCategoria) {
+            $categoria = CategoriaPostPortfolio::find((int) $idCategoria);
+            if (! $categoria || (int) $categoria->id_portfolio_artista !== (int) $portfolio->id) {
+                return back()->with('error', 'Categoria inválida para este portfólio.');
+            }
+        }
 
         // Cria o post
     
@@ -59,6 +72,7 @@ class PostPortfolioController extends Controller
             'nome' => $request->nome,
             'descricao' => $request->descricao,
             'id_portfolio' => $portfolio->id,
+            'id_categoria_post_portfolio' => $idCategoria ? (int) $idCategoria : null,
         ]);
         if ($request->hasFile('imagens')) { 
             foreach ($request->file('imagens') as $imagem) {
@@ -112,18 +126,33 @@ class PostPortfolioController extends Controller
             abort(403, 'Você não tem permissão para atualizar este post.');
         }
 
+        if ($request->input('id_categoria_post_portfolio') === '' || $request->input('id_categoria_post_portfolio') === null) {
+            $request->merge(['id_categoria_post_portfolio' => null]);
+        }
+
         $request->validate([
             'nome' => 'required|string|max:255',
             'descricao' => 'required|string|max:1000',
-            'imagens.*' => 'nullable|image|max:2048', // Permite novas imagens, mas são opcionais
+            'imagens.*' => 'nullable|file|mimes:jpeg,jpg,png,gif|max:8192', // Permite novas imagens, GIF incluído
             'imagens_para_remover' => 'nullable|array', // Array de IDs de imagens a serem removidas
             'imagens_para_remover.*' => 'exists:posts_imgs,id', // Valida se os IDs existem na tabela
+            'id_categoria_post_portfolio' => 'nullable|integer|exists:categorias_posts_portfolio,id',
         ]);
+
+        $portfolio = $post->portfolio;
+        $idCategoria = $request->input('id_categoria_post_portfolio');
+        if ($idCategoria) {
+            $categoria = CategoriaPostPortfolio::find((int) $idCategoria);
+            if (! $categoria || (int) $categoria->id_portfolio_artista !== (int) $portfolio->id) {
+                return back()->with('error', 'Categoria inválida para este portfólio.');
+            }
+        }
 
         // Atualiza os campos de texto do post
         $post->update([
             'nome' => $request->nome,
             'descricao' => $request->descricao,
+            'id_categoria_post_portfolio' => $idCategoria ? (int) $idCategoria : null,
         ]);
 
         // 1. Remover imagens existentes (se IDs foram enviados para remoção)

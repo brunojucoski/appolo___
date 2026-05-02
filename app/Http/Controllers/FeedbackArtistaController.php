@@ -2,49 +2,31 @@
 
 namespace App\Http\Controllers;
 
-
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-use App\Models\PropostaContrato; 
-use App\Models\Usuario;
-use App\Models\Notificacao;
-use App\Models\TipoUsuario;
 use App\Models\FeedbackArtista;
+use App\Models\PropostaContrato;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FeedbackArtistaController extends Controller
 {
-
+    /**
+     * Solicitante (tipo 3): propostas finalizadas em que ainda não avaliou o artista.
+     */
     public function verificarPendentes()
     {
         $usuario = auth()->user();
 
-        if (!$usuario || $usuario->tipo_usuario !== 3) {
+        if (! $usuario || (int) $usuario->tipo_usuario !== 3) {
             return response()->json([]);
         }
 
-        \Log::info('Verificando pendentes para contratante ID: ' . $usuario->id);
-
-        $propostas = PropostaContrato::with('artista')
+        $propostas = PropostaContrato::with(['artista', 'usuarioAvaliador'])
             ->where('id_usuario_avaliador', $usuario->id)
-            ->where('data', '<', now())
             ->where('status', 'Finalizada')
+            ->whereDoesntHave('feedbackArtistaNaProposta')
             ->get();
 
-        \Log::info('Propostas encontradas: ' . $propostas->count());
-
-        $pendentes = $propostas->filter(function ($proposta) use ($usuario) {
-            // AQUI ESTÁ A MUDANÇA CRUCIAL: Adicionar where('id_proposta', $proposta->id)
-            $temFeedback = FeedbackArtista::where('id_usuario_avaliador', $usuario->id)
-                ->where('id_artista', $proposta->id_artista)
-                ->where('id_proposta', $proposta->id) // <<< ADICIONE ESTA LINHA
-                ->exists();
-
-            \Log::info("Proposta ID {$proposta->id}: já tem feedback? " . ($temFeedback ? 'SIM' : 'NÃO'));
-
-            return !$temFeedback;
-        });
-
-        return response()->json($pendentes->values());
+        return response()->json($propostas);
     }
 
     public function store(Request $request)
@@ -57,20 +39,18 @@ class FeedbackArtistaController extends Controller
 
         $proposta = PropostaContrato::find($request->id_proposta);
 
-        // Verificação extra para evitar feedbacks duplicados para a mesma proposta
         $feedbackExistente = FeedbackArtista::where('id_proposta', $request->id_proposta)
-                                            ->where('id_usuario_avaliador', Auth::id())
-                                            ->exists();
+            ->where('id_usuario_avaliador', Auth::id())
+            ->exists();
 
         if ($feedbackExistente) {
-            // Opcional: redirecionar com erro ou mensagem
             return redirect()->back()->with('error', 'Você já enviou feedback para esta proposta.');
         }
 
         FeedbackArtista::create([
             'id_artista' => $proposta->id_artista,
             'id_usuario_avaliador' => Auth::id(),
-            'id_proposta' => $request->id_proposta, // <<< ADICIONE ESTA LINHA
+            'id_proposta' => $request->id_proposta,
             'nota' => $request->nota,
             'comentario' => $request->comentario,
         ]);

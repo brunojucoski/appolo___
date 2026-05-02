@@ -85,72 +85,124 @@ class UsuarioController extends Controller
 
 
 
-    public function perfil()
+    public function perfil(Request $request)
     {
         $usuario = Auth::user();
-        $usuario->load('portfolioArtista.posts.imagens', 'categoriasArtisticas');
-        
-        $posts = $usuario->portfolioArtista->posts ?? collect();
+        $usuario->load([
+            'portfolioArtista.posts.imagens',
+            'portfolioArtista.posts.categoriaPostPortfolio',
+            'portfolioArtista.categoriasPostsPortfolio.coverPost.imagens',
+            'portfolioArtista.perguntasPropostaContrato',
+            'categoriasArtisticas',
+            'todosFeedbacksRecebidosArtista.avaliador',
+            'todosFeedbacksRecebidosContratante.avaliador',
+        ]);
+
+        $categoriaId = $this->parseCategoriaQuery($request);
+        $feedbacks = $this->feedbackCollectionsForUsuario($usuario);
+        $portfolioData = $this->resolvePortfolioListagem($usuario, $categoriaId);
+        if ($categoriaId && $portfolioData['portfolio'] && ! $portfolioData['categoriaAtiva']) {
+            abort(404);
+        }
+
         $categorias = CategoriaArtistica::all();
         $categoriasSelecionadas = $usuario->categoriasArtisticas->pluck('id')->toArray();
+        $generos = SexoUsuario::all();
 
-         $generos = SexoUsuario::all();
-    
-        return view('usuarios.perfil_publico', compact('usuario', 'categorias', 'categoriasSelecionadas','generos'));
+        return view('usuarios.perfil_publico', array_merge(
+            $feedbacks,
+            $portfolioData,
+            compact('usuario', 'categorias', 'categoriasSelecionadas', 'generos')
+        ));
     }
 
 
 
-     public function showPerfilPublico($id)
+    public function showPerfilPublico(Request $request, $id)
     {
-        // Carrega o usuário e todos os relacionamentos necessários para a página.
-        // Incluímos 'todosFeedbacksRecebidosArtista.avaliador' e 'todosFeedbacksRecebidosContratante.avaliador'
-        // para buscar *todos* os feedbacks e os dados dos avaliadores em uma única consulta otimizada.
         $usuario = Usuario::with([
-            'portfolioArtista.posts.imagens', // Mantém este relacionamento, importante para o portfolio e posts
+            'portfolioArtista.posts.imagens',
+            'portfolioArtista.posts.categoriaPostPortfolio',
+            'portfolioArtista.categoriasPostsPortfolio.coverPost.imagens',
+            'portfolioArtista.perguntasPropostaContrato',
             'categoriasArtisticas',
-            'todosFeedbacksRecebidosArtista.avaliador',        // Carrega feedbacks de artistas e seus avaliadores
-            'todosFeedbacksRecebidosContratante.avaliador'     // Carrega feedbacks de contratantes e seus avaliadores
+            'todosFeedbacksRecebidosArtista.avaliador',
+            'todosFeedbacksRecebidosContratante.avaliador',
         ])->findOrFail($id);
 
-        // --- PREPARAÇÃO DOS DADOS DE FEEDBACK PARA A VIEW ---
-        // Inicializa as coleções de feedbacks que serão usadas no Blade
-        $feedbacksParaMedia = collect(); // Vai conter TODOS os feedbacks para cálculo da média
-        $feedbacksParaLista = collect(); // Vai conter apenas os 3 últimos para a lista
-
-        // Lógica condicional para popular as coleções de feedback baseada no tipo de usuário do PERFIL que está sendo visitado
-        if ($usuario->tipo_usuario == 2) { // Se o perfil é de um ARTISTA
-            $feedbacksParaMedia = $usuario->todosFeedbacksRecebidosArtista;
-            $feedbacksParaLista = $usuario->todosFeedbacksRecebidosArtista->sortByDesc('created_at')->take(3);
-        } elseif ($usuario->tipo_usuario == 3) { // Se o perfil é de um CONTRATANTE
-            $feedbacksParaMedia = $usuario->todosFeedbacksRecebidosContratante;
-            $feedbacksParaLista = $usuario->todosFeedbacksRecebidosContratante->sortByDesc('created_at')->take(3);
+        $categoriaId = $this->parseCategoriaQuery($request);
+        $feedbacks = $this->feedbackCollectionsForUsuario($usuario);
+        $portfolioData = $this->resolvePortfolioListagem($usuario, $categoriaId);
+        if ($categoriaId && $portfolioData['portfolio'] && ! $portfolioData['categoriaAtiva']) {
+            abort(404);
         }
-        // Se houver outros tipos de usuário que recebem feedback, adicione mais 'else if' aqui.
-        // Se um tipo de usuário não recebe feedback, $feedbacksParaMedia e $feedbacksParaLista permanecerão como 'collect()' vazio.
 
-
-        // --- PREPARAÇÃO DE OUTRAS VARIÁVEIS PARA A VIEW (SEU CÓDIGO EXISTENTE) ---
-        // Garante que 'posts' e 'portfolio' existam mesmo se o portfólio for nulo
-        $posts = $usuario->portfolioArtista->posts ?? collect();
-        $portfolio = $usuario->portfolioArtista; 
-
-        // Carrega categorias e gêneros (se ainda não estiverem carregadas via eager loading no `Usuario::with`)
         $categorias = CategoriaArtistica::all();
         $categoriasSelecionadas = $usuario->categoriasArtisticas->pluck('id')->toArray();
         $generos = SexoUsuario::all();
-        
-        // Retorna a view com todas as variáveis necessárias
-        return view('usuarios.perfil_publico', compact(
-            'usuario',
-            'posts',
-            'categorias',
-            'categoriasSelecionadas',
-            'portfolio',
-            'generos',
-            'feedbacksParaMedia', // Variável para a média (contém TODOS os feedbacks)
-            'feedbacksParaLista'  // Variável para a lista (contém os 3 últimos feedbacks)
+
+        return view('usuarios.perfil_publico', array_merge(
+            $feedbacks,
+            $portfolioData,
+            compact('usuario', 'categorias', 'categoriasSelecionadas', 'generos')
         ));
+    }
+
+    private function parseCategoriaQuery(Request $request): ?int
+    {
+        $q = $request->query('categoria');
+        if ($q === null || $q === '') {
+            return null;
+        }
+
+        return (int) $q;
+    }
+
+    /**
+     * @return array{feedbacksParaMedia: \Illuminate\Support\Collection, feedbacksParaLista: \Illuminate\Support\Collection}
+     */
+    private function feedbackCollectionsForUsuario(Usuario $usuario): array
+    {
+        $feedbacksParaMedia = collect();
+        $feedbacksParaLista = collect();
+
+        if ($usuario->tipo_usuario == 2) {
+            $feedbacksParaMedia = $usuario->todosFeedbacksRecebidosArtista;
+            $feedbacksParaLista = $usuario->todosFeedbacksRecebidosArtista->sortByDesc('created_at')->take(3);
+        } elseif ($usuario->tipo_usuario == 3) {
+            $feedbacksParaMedia = $usuario->todosFeedbacksRecebidosContratante;
+            $feedbacksParaLista = $usuario->todosFeedbacksRecebidosContratante->sortByDesc('created_at')->take(3);
+        }
+
+        return compact('feedbacksParaMedia', 'feedbacksParaLista');
+    }
+
+    /**
+     * @return array{portfolio: ?\App\Models\PortfolioArtista, categoriasPortfolio: \Illuminate\Support\Collection, categoriaAtiva: ?\App\Models\CategoriaPostPortfolio, posts: \Illuminate\Support\Collection}
+     */
+    private function resolvePortfolioListagem(Usuario $usuario, ?int $categoriaId): array
+    {
+        $portfolio = $usuario->portfolioArtista;
+        $categoriasPortfolio = $portfolio
+            ? $portfolio->categoriasPostsPortfolio
+            : collect();
+
+        $categoriaAtiva = null;
+        if ($categoriaId && $portfolio) {
+            $categoriaAtiva = $categoriasPortfolio->firstWhere('id', $categoriaId);
+        }
+
+        $allPosts = $portfolio && $portfolio->relationLoaded('posts')
+            ? $portfolio->posts
+            : ($portfolio ? $portfolio->posts : collect());
+
+        if ($categoriaAtiva) {
+            $posts = $allPosts->where('id_categoria_post_portfolio', $categoriaAtiva->id)->values();
+        } else {
+            $posts = $allPosts->filter(fn ($p) => $p->id_categoria_post_portfolio === null)->values();
+        }
+
+        return compact('portfolio', 'categoriasPortfolio', 'categoriaAtiva', 'posts');
     }
 
 
@@ -216,7 +268,9 @@ class UsuarioController extends Controller
         'bairro' => 'nullable|string|max:255',
         'endereco' => 'nullable|string|max:255',
         'senha' => 'nullable|string|min:8|confirmed',
-        'foto_perfil' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+        // Sem regra "image": GIF (principalmente animado) falha em alguns ambientes com "image";
+        // mime/extension são conferidos por mimes + max em KB.
+        'foto_perfil' => 'nullable|file|mimes:jpeg,jpg,png,gif|max:8192',
         'sexo_usuario' => 'required|integer|exists:sexo_usuario,id',
     ]);
 
@@ -235,7 +289,7 @@ class UsuarioController extends Controller
     if ($request->hasFile('foto_perfil')) {
     
         if ($usuario->foto_perfil) {
-            Storage::delete($usuario->foto_perfil);
+            Storage::disk('public')->delete($usuario->foto_perfil);
         }
 
         $path = $request->file('foto_perfil')->store('fotos_perfil', 'public');
@@ -246,7 +300,23 @@ class UsuarioController extends Controller
 
     return redirect()->back()->with('success', 'Perfil atualizado com sucesso!');
 }
-    
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'senha' => 'required|string|min:8|confirmed',
+        ], [
+            'senha.required' => 'Informe a nova senha.',
+            'senha.min' => 'A senha deve ter no mínimo 8 caracteres.',
+            'senha.confirmed' => 'A confirmação não confere com a nova senha.',
+        ]);
+
+        $usuario = Auth::user();
+        $usuario->senha = Hash::make($request->senha);
+        $usuario->save();
+
+        return redirect()->back()->with('success', 'Senha alterada com sucesso!');
+    }
 
 
     /**

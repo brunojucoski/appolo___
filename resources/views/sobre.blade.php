@@ -29,7 +29,15 @@
 
           <h2 class=" mb-4 text-sobre">
            <br> 
-            Somos uma equipe de formandos do curso de Análise e Desenvolvimento de Sistemas da instituição SENAC, que através do Projeto Integrador de conclusão de curso, desenvolvemos a Appolo, a fim de criar uma sociedade mais justa e inclusiva! 
+            O MeuPortfólio é uma plataforma de conexão entre artistas e solicitantes, que visa facilitar a busca e a contratação de serviços. A fim de dar visibilidade para profissionais do setor cultural. O projeto é sem fins lucrativos e é desenvolvido por @cajutatueiro para a comunidade ... Porém aceito investimentos hehe tenho mais ideias para implementar também inclusive. 
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
           </h2>
  
         </div>

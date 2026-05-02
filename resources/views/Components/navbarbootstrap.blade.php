@@ -122,7 +122,10 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownProfile">
                                 <li><a class="dropdown-item" href="{{ route('usuarios.perfilPublico', Auth::user()->id) }}">Perfil</a></li>
-                                <li><a class="dropdown-item" href="{{ route('propostas.minhas') }}">Minhas Propostas</a></li>
+                                @if(Auth::user()->tipo_usuario == 2 && Auth::user()->portfolioArtista)
+                                    <li><a class="dropdown-item" href="{{ route('perguntas-proposta.index') }}">Formulário de orçamento</a></li>
+                                @endif
+                                <li><a class="dropdown-item" href="{{ route('propostas.minhas') }}">Meus orçamentos</a></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf
@@ -160,7 +163,10 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end w-100" aria-labelledby="dropdownProfileOffcanvas">
                                 <li><a class="dropdown-item" href="{{ route('usuarios.perfilPublico', Auth::user()->id) }}">Perfil</a></li>
-                                <li><a class="dropdown-item" href="{{ route('propostas.minhas') }}">Minhas Propostas</a></li>
+                                @if(Auth::user()->tipo_usuario == 2 && Auth::user()->portfolioArtista)
+                                    <li><a class="dropdown-item" href="{{ route('perguntas-proposta.index') }}">Formulário de orçamento</a></li>
+                                @endif
+                                <li><a class="dropdown-item" href="{{ route('propostas.minhas') }}">Meus orçamentos</a></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf
@@ -229,7 +235,7 @@
             style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #ccc;"
         >
     </label>
-    <input type="file" id="foto_perfil" name="foto_perfil" class="d-none" onchange="previewImagem(event)">
+    <input type="file" id="foto_perfil" name="foto_perfil" class="d-none" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif" onchange="previewImagem(event)">
     <div class="form-text">Clique na imagem para alterar sua foto de perfil</div>
     </div>
 
@@ -278,16 +284,12 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Nova Senha</label>
-                            <input type="password" name="senha" class="form-control">
+                            <button type="button" class="btn btn-outline-custom w-100 d-flex align-items-center justify-content-center gap-2" data-bs-dismiss="offcanvas" data-bs-toggle="modal" data-bs-target="#modalRedefinirSenha">
+                                <i class="bi bi-key"></i> Redefinir senha
+                            </button>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Confirmar Nova Senha</label>
-                            <input type="password" name="senha_confirmation" class="form-control">
-                        </div>
-              </div>
-                    <div class="modal-footer p-3">
+                    <div class="modal-footer p-3 border-0">
                       <button type="button" class="btn btn-outline-custom me-2" data-bs-dismiss="offcanvas">Cancelar</button>
                       <button type="submit" class="btn btn-primary-custom">Confirmar</button>
                     </div>
@@ -295,12 +297,45 @@
                     
       </div>
     </div>
- 
 
-
+  <div class="modal fade" id="modalRedefinirSenha" tabindex="-1" aria-labelledby="modalRedefinirSenhaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title botao_home" id="modalRedefinirSenhaLabel">Redefinir senha</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <form method="POST" action="{{ route('usuarios.password.update') }}">
+          @csrf
+          @method('PUT')
+          <div class="modal-body">
+            <p class="text-muted small">Use pelo menos 8 caracteres.</p>
+            <div class="mb-3">
+              <label for="redefinir_senha_nova" class="form-label">Nova senha</label>
+              <input type="password" name="senha" id="redefinir_senha_nova" class="form-control" required minlength="8" autocomplete="new-password">
+            </div>
+            <div class="mb-3">
+              <label for="redefinir_senha_confirma" class="form-label">Confirmar nova senha</label>
+              <input type="password" name="senha_confirmation" id="redefinir_senha_confirma" class="form-control" required minlength="8" autocomplete="new-password">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary-custom">Salvar senha</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
   @auth
     @if(Auth::user()->tipo_usuario == 2)
+        @php
+            $navPortfolio = Auth::user()->portfolioArtista;
+            $navCategoriasPostPortfolio = $navPortfolio
+                ? $navPortfolio->categoriasPostsPortfolio
+                : collect();
+        @endphp
 
   <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -315,27 +350,38 @@
 
 
               <div class="mb-3">
-                <label for="nome" class="form-label">Título</label>
-                <input type="text" class="form-control" name="nome" id="nome" placeholder="Título do seu post">
+                <label for="post_modal_nome" class="form-label">Título</label>
+                <input type="text" class="form-control" name="nome" id="post_modal_nome" placeholder="Título do seu post">
               </div>
-
-
-              <div class="mb-4">
-                <label for="descricao" class="form-label">Descrição</label>
-                <textarea class="form-control" name="descricao" id="descricao" rows="3" placeholder="Descreva sua obra"></textarea>
-              </div>
-
 
 
               <div class="mb-3">
-                <label for="imagens" class="form-label">Imagens</label>
-                <input class="form-control" type="file" name="imagens[]" id="imagens" multiple>
+                <label for="post_modal_descricao" class="form-label">Descrição</label>
+                <textarea class="form-control" name="descricao" id="post_modal_descricao" rows="3" placeholder="Descreva sua obra"></textarea>
+              </div>
+
+              @if($navPortfolio)
+              <div class="mb-3">
+                <label for="post_modal_id_categoria" class="form-label">Publicar em categoria <span class="text-muted fw-normal">(opcional)</span></label>
+                <select name="id_categoria_post_portfolio" id="post_modal_id_categoria" class="form-select">
+                  <option value="">Sem categoria — aparece na página principal do portfólio</option>
+                  @foreach($navCategoriasPostPortfolio as $cat)
+                    <option value="{{ $cat->id }}">{{ $cat->nome }}</option>
+                  @endforeach
+                </select>
+              </div>
+              @endif
+
+
+              <div class="mb-3">
+                <label for="post_modal_imagens" class="form-label">Imagens</label>
+                <input class="form-control" type="file" name="imagens[]" id="post_modal_imagens" multiple accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif">
               </div>
 
             
 
               
-              <div class="modal-footer">
+              <div class="modal-footer px-0 pb-0">
                 <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancelar</button>
                 <button type="submit" class="btn btn-primary-custom">Publicar</button>
               </div>
@@ -596,9 +642,9 @@ function buscarCEP(cep) {
                     // Preenche texto com nome artístico ou nome do contratante
                     let texto = '';
                     if (tipoUsuario === 3) {
-                        texto = `Avalie o artista "${proposta.artista.nome_artistico}" sobre a proposta "${proposta.titulo}" executada na data ${new Date(proposta.data).toLocaleDateString()}`;
+                        texto = `Avalie o artista "${proposta.artista?.nome_artistico ?? ''}" sobre a proposta #${proposta.id}.`;
                     } else {
-                        texto = `Avalie o contratante "${proposta.usuario_avaliador.nome}" sobre a proposta "${proposta.titulo}" executada na data ${new Date(proposta.data).toLocaleDateString()}`;
+                        texto = `Avalie o contratante "${proposta.usuario_avaliador?.nome ?? ''}" sobre a proposta #${proposta.id}.`;
                     }
 
                     document.getElementById('feedbackInfo').innerText = texto;

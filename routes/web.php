@@ -9,12 +9,14 @@ use App\Http\Controllers\{
     TipoUsuarioController,
     PortfolioArtistaController,
     ProfileController,
-    PostPortfolioController
+    PostPortfolioController,
+    CategoriaPostPortfolioController
 };
 use App\Http\Controllers\NotificacaoController;
 use App\Http\Controllers\FeedbackArtistaController;
 use App\Http\Controllers\FeedbackContratanteController;
 use App\Http\Controllers\PropostaContratoController;
+use App\Http\Controllers\PerguntaPropostaContratoController;
 use Illuminate\Http\Request;
 
 
@@ -109,21 +111,38 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/perfil', [UsuarioController::class, 'perfil'])->name('perfil');
+    Route::put('/perfil/senha', [UsuarioController::class, 'updatePassword'])->name('usuarios.password.update');
 });
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/posts', [PostPortfolioController::class, 'store'])->name('posts.store');
     Route::put('/posts/{post}', [PostPortfolioController::class, 'update'])->name('posts.update'); 
     Route::delete('/posts/{post}', [PostPortfolioController::class, 'destroy'])->name('posts.destroy'); 
+
+    Route::post('/categorias-posts-portfolio', [CategoriaPostPortfolioController::class, 'store'])->name('categorias-posts-portfolio.store');
+    Route::put('/categorias-posts-portfolio/{categoriaPostPortfolio}', [CategoriaPostPortfolioController::class, 'update'])->name('categorias-posts-portfolio.update');
+    Route::delete('/categorias-posts-portfolio/{categoriaPostPortfolio}', [CategoriaPostPortfolioController::class, 'destroy'])->name('categorias-posts-portfolio.destroy');
 });
 
 //proposta de trampo
 Route::post('/propostas', [PropostaContratoController::class, 'store'])
     ->middleware('auth')
     ->name('propostas.store');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/perguntas-proposta', [PerguntaPropostaContratoController::class, 'index'])->name('perguntas-proposta.index');
+    Route::post('/perguntas-proposta', [PerguntaPropostaContratoController::class, 'store'])->name('perguntas-proposta.store');
+    Route::put('/perguntas-proposta/{perguntaPropostaContrato}', [PerguntaPropostaContratoController::class, 'update'])->name('perguntas-proposta.update');
+    Route::delete('/perguntas-proposta/{perguntaPropostaContrato}', [PerguntaPropostaContratoController::class, 'destroy'])->name('perguntas-proposta.destroy');
+});
     
 Route::middleware('auth')->post('/responder-proposta/{id}', [PropostaContratoController::class, 'responder'])
      ->name('proposta.responder');
+
+Route::middleware('auth')->post('/propostas/{proposta}/timeline', [PropostaContratoController::class, 'storeTimeline'])
+    ->name('propostas.timeline.store');
+Route::middleware('auth')->post('/propostas/{proposta}/finalizar', [PropostaContratoController::class, 'finalizar'])
+    ->name('propostas.finalizar');
 
 Route::middleware('auth')->get('/minhas-propostas', [PropostaContratoController::class, 'minhasPropostas'])->name('propostas.minhas');
 

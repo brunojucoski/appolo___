@@ -10,7 +10,7 @@
  <body>
      <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
          <div class="container">
-             <a class="navbar-brand" href="{{ route('categorias-artisticas.index') }}">Appolo</a>
+             <a class="navbar-brand" href="{{ route('categorias-artisticas.index') }}">MeuPortfólio</a>
              <div class="collapse navbar-collapse">
                  <ul class="navbar-nav me-auto">
                      <li class="nav-item">

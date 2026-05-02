@@ -13,6 +13,7 @@ class PostPortfolio extends Model
 
     protected $fillable = [
         'id_portfolio',
+        'id_categoria_post_portfolio',
         'nome',
         'descricao',
     ];
@@ -21,6 +22,11 @@ class PostPortfolio extends Model
     public function portfolio()
     {
         return $this->belongsTo(PortfolioArtista::class, 'id_portfolio');
+    }
+
+    public function categoriaPostPortfolio()
+    {
+        return $this->belongsTo(CategoriaPostPortfolio::class, 'id_categoria_post_portfolio');
     }
 
     public function imagens()

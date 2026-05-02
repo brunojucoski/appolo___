@@ -36,7 +36,7 @@
             
                 <div class="col-md-5 w-50">
                     <select name="categoria" class="form-control" onchange="document.getElementById('filtroForm').submit();">
-                        <option value="">Todas as categorias</option>
+                        <option value="">Selecione uma área de atuação</option>
                         @foreach($categorias as $categoria)
                             <option value="{{ $categoria->id }}" {{ request('categoria') == $categoria->id ? 'selected' : '' }}>
                                 {{ $categoria->nome }}

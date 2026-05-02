@@ -25,8 +25,8 @@
       <div class="row align-items-center">
         <div class="col-md-6 text-center align-items-center ">
           <h2 class="hero-text mb-4">
-           <strong style="text-transform: uppercase;"> Junte-se à nossa comunidade e transforme a cultura! </strong> <br> 
-            Conecte talentos a oportunidades e ajude a construir uma sociedade mais viva, justa e acessível para todos.
+           <strong style="text-transform: uppercase;"> Junte-se à nossa comunidade!  </strong> <br> 
+            Cadastre-se e organize seu portfólio. Receba orçamentos e conheça outros profissionais do meio cultural.
           </h2>
           <a class="btn btn-primary-custom big-btn mx-auto w-auto botao_home"  href="{{ route('usuarios.publico') }}"> BUSQUE PROFISSIONAIS </a>
         </div>
