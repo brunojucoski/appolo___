@@ -15,6 +15,11 @@ class Usuario extends Authenticatable
 {
     use Notifiable, SoftDeletes, HasApiTokens , HasFactory;
 
+    /** Conta interna usada em propostas enviadas sem login (não use para login manual). */
+    public const EMAIL_VISITANTE_NAO_IDENTIFICADO = 'visitante-nao-identificado@meuportfolio.local';
+
+    protected static ?int $visitanteNaoIdentificadoIdCache = null;
+
     protected $table = 'usuarios';
 
     protected $fillable = [
@@ -44,6 +49,27 @@ class Usuario extends Authenticatable
     public function tipo()
     {
         return $this->belongsTo(TipoUsuario::class, 'tipo_usuario');
+    }
+
+    /**
+     * ID do usuário interno "Não se identificou", ou null se a migração ainda não foi executada.
+     */
+    public static function idVisitanteNaoIdentificado(): ?int
+    {
+        if (self::$visitanteNaoIdentificadoIdCache !== null) {
+            return self::$visitanteNaoIdentificadoIdCache;
+        }
+
+        self::$visitanteNaoIdentificadoIdCache = static::query()
+            ->where('email', self::EMAIL_VISITANTE_NAO_IDENTIFICADO)
+            ->value('id');
+
+        return self::$visitanteNaoIdentificadoIdCache;
+    }
+
+    public function ehVisitanteNaoIdentificado(): bool
+    {
+        return $this->email === self::EMAIL_VISITANTE_NAO_IDENTIFICADO;
     }
 
 

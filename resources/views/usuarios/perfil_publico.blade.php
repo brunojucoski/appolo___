@@ -30,7 +30,7 @@
 
   
     {{-- Modais de Erro/Sucesso --}}
-@if(session('success'))
+@if(session('success') && !session('prompt_whatsapp_proposta'))
     <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -68,6 +68,40 @@
 
             var successModal = new bootstrap.Modal(document.getElementById('successModal'));
             successModal.show();
+        });
+    </script>
+@endif
+
+@if(session('prompt_whatsapp_proposta') && session('whatsapp_proposta_url'))
+    <div class="modal fade" id="modalWhatsappPosProposta" tabindex="-1" aria-labelledby="modalWhatsappPosPropostaLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="text-nome" id="modalWhatsappPosPropostaLabel">Proposta enviada</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-success small mb-2">Proposta enviada com sucesso!</p>
+                    <p class="mb-0">Deseja também informar ao profissional via WhatsApp sobre o seu orçamento enviado?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-custom" id="btnWhatsappPropostaSim">Sim</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Não</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var url = @json(session('whatsapp_proposta_url'));
+            var el = document.getElementById('modalWhatsappPosProposta');
+            if (!el || !url) return;
+            var modal = new bootstrap.Modal(el);
+            modal.show();
+            document.getElementById('btnWhatsappPropostaSim').addEventListener('click', function () {
+                window.open(url, '_blank');
+                modal.hide();
+            });
         });
     </script>
 @endif
@@ -149,10 +183,19 @@
                             </div>
                         @endif
 
-                        @auth
+                        @guest
+                            @if($usuario->tipo_usuario == 2 && $usuario->portfolioArtista && $usuario->portfolioArtista->perguntasPropostaContrato->count() > 0)
+                                <button type="button" class="btn btn-sm btn-outline-custom" data-bs-toggle="modal" data-bs-target="#modalConviteCadastroSolicitante">
+                                    Enviar orçamento
+                                </button>
+                               
+                            @else
+                             
+                            @endif
+                        @else
                             @if(Auth::user()->tipo_usuario == 3 && $usuario->tipo_usuario == 2)
                                 @if($usuario->portfolioArtista && $usuario->portfolioArtista->perguntasPropostaContrato->count() > 0)
-                                    <button class="btn btn-sm btn-outline-custom" data-bs-toggle="modal" data-bs-target="#modalPropostaContrato">
+                                    <button type="button" class="btn btn-sm btn-outline-custom" data-bs-toggle="modal" data-bs-target="#modalPropostaContrato">
                                         Enviar orçamento
                                     </button>
                                 @elseif($usuario->portfolioArtista)
@@ -165,11 +208,7 @@
                                     </button>
                                 @endif
                             @endif
-                        @else
-                            <a href="{{ url('/cadastro/contratante') }}" class="btn btn-sm btn-outline-custom">
-                                Cadastre-se para contratar
-                            </a>
-                        @endauth
+                        @endguest
 
                         @auth
                             @if(auth()->user()->id === $usuario->id && auth()->user()->tipo_usuario == 2)
@@ -447,8 +486,27 @@
 
 
     {{-- 4. MODAIS GERAIS  --}}
-    {{-- Modal Proposta de Contrato --}}
     @if($usuario->portfolioArtista && $usuario->portfolioArtista->perguntasPropostaContrato->count() > 0)
+        {{-- Modal: cadastro solicitante (visitantes) --}}
+        <div class="modal fade" id="modalConviteCadastroSolicitante" tabindex="-1" aria-labelledby="modalConviteCadastroSolicitanteLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-nome" id="modalConviteCadastroSolicitanteLabel">Cadastro na plataforma</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">Para acompanhar melhor seu orçamento gostaria de se cadastrar como solicitante na plataforma?</p>
+                    </div>
+                    <div class="modal-footer flex-wrap gap-2">
+                        <a href="{{ route('usuarios.createContratante') }}" class="btn btn-outline-custom">Sim</a>
+                        <button type="button" class="btn btn-outline-secondary" id="btnConviteCadastroNao">Não</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal Proposta de Contrato --}}
         <div class="modal fade p-5 mx-auto modal_proposta" id="modalPropostaContrato" tabindex="-1" role="dialog" aria-labelledby="modalPropostaContratoLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-width: 60%; margin: auto;">
                 <form action="{{ route('propostas.store') }}" method="POST" enctype="multipart/form-data">
@@ -460,7 +518,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                         </div>
                         <div class="modal-body">
-                            <p class="text-muted small">Responda às perguntas definidas pelo artista.</p>
+                            <p class="text-muted small">Responda às perguntas definidas pelo profissional que deseja enviar o orçamento.</p>
                             @foreach($usuario->portfolioArtista->perguntasPropostaContrato as $pergunta)
                                 <div class="mb-4 border-bottom pb-3">
                                     <label class="form-label fw-semibold">{{ $pergunta->titulo }}</label>
@@ -761,6 +819,22 @@
         const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deletePostConfirmModal'));
         deleteConfirmModal.show();
     }
+
+    (function () {
+        var btnNao = document.getElementById('btnConviteCadastroNao');
+        if (!btnNao) return;
+        btnNao.addEventListener('click', function () {
+            var conviteEl = document.getElementById('modalConviteCadastroSolicitante');
+            var propostaEl = document.getElementById('modalPropostaContrato');
+            if (!conviteEl || !propostaEl) return;
+            var conviteModal = bootstrap.Modal.getOrCreateInstance(conviteEl);
+            conviteEl.addEventListener('hidden.bs.modal', function onHidden() {
+                conviteEl.removeEventListener('hidden.bs.modal', onHidden);
+                bootstrap.Modal.getOrCreateInstance(propostaEl).show();
+            });
+            conviteModal.hide();
+        });
+    })();
 </script>
 
 

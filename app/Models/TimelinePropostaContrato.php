@@ -48,8 +48,12 @@ class TimelinePropostaContrato extends Model
             return "{$when} — \"{$nome}\": {$this->texto}";
         }
 
+        $quem = $this->usuario
+            ? "\"{$nome}\""
+            : 'Um visitante (sem cadastro)';
+
         return match ($this->codigo_evento) {
-            self::EVT_ENVIO => "{$when} — \"{$nome}\" enviou uma proposta de orçamento.",
+            self::EVT_ENVIO => "{$when} — {$quem} enviou uma proposta de orçamento.",
             self::EVT_ACEITE => "{$when} — \"{$nome}\" aceitou a proposta.".($this->texto ? ' Observações: '.$this->texto : ''),
             self::EVT_RECUSA => "{$when} — \"{$nome}\" recusou a proposta.".($this->texto ? ' Motivo: '.$this->texto : ''),
             self::EVT_FINALIZADA => "{$when} — \"{$nome}\" marcou a proposta como concluída.",

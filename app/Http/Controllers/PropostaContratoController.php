@@ -8,6 +8,7 @@ use App\Models\PortfolioArtista;
 use App\Models\PropostaContrato;
 use App\Models\RespostaPropostaPergunta;
 use App\Models\TimelinePropostaContrato;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +23,9 @@ class PropostaContratoController extends Controller
 
     public function store(Request $request)
     {
-        if ((int) Auth::user()->tipo_usuario !== 3) {
+        $guest = ! Auth::check();
+
+        if (! $guest && (int) Auth::user()->tipo_usuario !== 3) {
             abort(403, 'Apenas solicitantes podem enviar propostas.');
         }
 
@@ -66,9 +69,17 @@ class PropostaContratoController extends Controller
             }
         }
 
+        $idAvaliador = Auth::id();
+        if ($guest) {
+            $idAvaliador = Usuario::idVisitanteNaoIdentificado();
+            if (! $idAvaliador) {
+                return redirect()->back()->with('error', 'Não foi possível registrar o orçamento: execute as migrações do sistema (usuário interno ausente).');
+            }
+        }
+
         $proposta = PropostaContrato::create([
             'id_artista' => $portfolio->id,
-            'id_usuario_avaliador' => Auth::id(),
+            'id_usuario_avaliador' => $idAvaliador,
             'status' => 'Aguardando resposta',
         ]);
 
@@ -92,27 +103,51 @@ class PropostaContratoController extends Controller
         }
 
         $portfolio->load('usuario');
-        $nomeContratante = Auth::user()->nome ?? 'Solicitante';
+        $nomeContratante = Auth::check()
+            ? (Auth::user()->nome ?? 'Solicitante')
+            : (Usuario::find($idAvaliador)?->nome ?? 'Não se identificou');
 
         if ($portfolio->usuario) {
             Notificacao::create([
                 'usuario_id' => $portfolio->usuario->id,
-                'remetente_id' => Auth::id(),
+                'remetente_id' => $idAvaliador,
                 'mensagem' => "Você recebeu uma nova proposta de trabalho de {$nomeContratante}.",
                 'lida' => false,
                 'proposta_id' => $proposta->id,
             ]);
         }
 
-        TimelinePropostaContrato::create([
-            'id_proposta' => $proposta->id,
-            'id_usuario' => Auth::id(),
-            'tipo' => TimelinePropostaContrato::TIPO_EVENTO,
-            'codigo_evento' => TimelinePropostaContrato::EVT_ENVIO,
-            'texto' => null,
-        ]);
+        if (! $guest) {
+            TimelinePropostaContrato::create([
+                'id_proposta' => $proposta->id,
+                'id_usuario' => Auth::id(),
+                'tipo' => TimelinePropostaContrato::TIPO_EVENTO,
+                'codigo_evento' => TimelinePropostaContrato::EVT_ENVIO,
+                'texto' => null,
+            ]);
+        }
 
-        return redirect()->back()->with('success', 'Proposta enviada com sucesso!');
+        $proposta->load(['respostasPergunta.pergunta']);
+        $telefoneProfissional = $portfolio->usuario?->telefone;
+        $mensagemWa = $this->montarMensagemWhatsappProposta($proposta);
+        $urlWhatsapp = $this->montarUrlWhatsapp($telefoneProfissional, $mensagemWa);
+
+        if ($guest) {
+            if ($urlWhatsapp) {
+                return redirect()->away($urlWhatsapp);
+            }
+
+            return redirect()->back()->with('success', 'Proposta enviada com sucesso! O profissional não possui telefone cadastrado; não foi possível abrir o WhatsApp.');
+        }
+
+        if ($urlWhatsapp) {
+            return redirect()->back()
+                ->with('success', 'Proposta enviada com sucesso!')
+                ->with('prompt_whatsapp_proposta', true)
+                ->with('whatsapp_proposta_url', $urlWhatsapp);
+        }
+
+        return redirect()->back()->with('success', 'Proposta enviada com sucesso! O profissional não possui telefone cadastrado; não foi possível sugerir envio pelo WhatsApp.');
     }
 
     public function show($id)
@@ -185,6 +220,10 @@ class PropostaContratoController extends Controller
                 return redirect()->back()->with('error', 'Esta proposta não pertence a você.');
             }
 
+            if ($proposta->ehPropostaSemIdentificacao()) {
+                return redirect()->back()->with('error', 'Este orçamento foi enviado sem cadastro na plataforma. Combine aceite ou recusa diretamente com a pessoa pelo WhatsApp.');
+            }
+
             $resposta = $request->input('status');
             $motivo = $request->input('motivo');
 
@@ -221,13 +260,15 @@ class PropostaContratoController extends Controller
                 ? "Sua proposta enviada a {$nomeExibicao} foi recusada pelo artista {$usuario->nome}. Motivo: \"{$motivo}\"."
                 : "Sua proposta foi aprovada por {$usuario->nome}. {$telefone}Observações: \"{$motivo}\".";
 
-            Notificacao::create([
-                'usuario_id' => $proposta->id_usuario_avaliador,
-                'remetente_id' => $usuario->id,
-                'mensagem' => $mensagem,
-                'proposta_id' => $proposta->id,
-                'lida' => false,
-            ]);
+            if ($proposta->id_usuario_avaliador) {
+                Notificacao::create([
+                    'usuario_id' => $proposta->id_usuario_avaliador,
+                    'remetente_id' => $usuario->id,
+                    'mensagem' => $mensagem,
+                    'proposta_id' => $proposta->id,
+                    'lida' => false,
+                ]);
+            }
 
             return redirect()->back()->with('success', 'Resposta registrada com sucesso.');
 
@@ -281,11 +322,14 @@ class PropostaContratoController extends Controller
             $propostas = $query->latest()->get();
         }
 
-        $avaliadores = PropostaContrato::select('id_usuario_avaliador')
+        $avaliadores = PropostaContrato::query()
+            ->whereNotNull('id_usuario_avaliador')
+            ->select('id_usuario_avaliador')
             ->with('usuarioAvaliador')
             ->distinct()
             ->get()
             ->pluck('usuarioAvaliador')
+            ->filter()
             ->unique('id');
 
         return view('propostas.minhas_propostas', compact('propostas', 'usuario', 'avaliadores'));
@@ -295,6 +339,10 @@ class PropostaContratoController extends Controller
     {
         if (! $this->usuarioPodeParticiparDaProposta($proposta)) {
             abort(403);
+        }
+
+        if ($proposta->ehPropostaSemIdentificacao()) {
+            return redirect()->back()->with('error', 'Não há timeline para orçamentos enviados sem cadastro; use o WhatsApp para combinar com o solicitante.');
         }
 
         if ($proposta->status === 'Recusada') {
@@ -328,6 +376,10 @@ class PropostaContratoController extends Controller
             abort(403);
         }
 
+        if ($proposta->ehPropostaSemIdentificacao()) {
+            return redirect()->back()->with('error', 'Não é possível concluir pelo site orçamentos enviados sem cadastro.');
+        }
+
         if ($proposta->status !== 'Aguardando execução') {
             return redirect()->back()->with('error', 'Só é possível concluir propostas em "Aguardando execução".');
         }
@@ -356,9 +408,55 @@ class PropostaContratoController extends Controller
         return redirect()->back()->with('success', 'Proposta marcada como concluída.');
     }
 
+    private function montarMensagemWhatsappProposta(PropostaContrato $proposta): string
+    {
+        $proposta->loadMissing('respostasPergunta.pergunta');
+        $linhas = [
+            'Ola, acabo de lhe enviar uma proposta de orçamento via MeuPortfólio, aqui estão os dados que eu informei :',
+        ];
+        $sorted = $proposta->respostasPergunta->sortBy(function ($r) {
+            $p = $r->pergunta;
+
+            return ($p->ordem ?? 0) * 100000 + $p->id;
+        });
+        foreach ($sorted as $resp) {
+            $pergunta = $resp->pergunta;
+            if (! $pergunta) {
+                continue;
+            }
+            if ($pergunta->tipo === 'texto') {
+                $valor = trim((string) ($resp->texto_resposta ?? ''));
+            } elseif ($pergunta->tipo === 'opcoes') {
+                $opts = $pergunta->opcoesList();
+                $idx = (int) ($resp->indice_opcao ?? -1);
+                $valor = $opts[$idx] ?? '';
+            } else {
+                $valor = $resp->caminho_anexo
+                    ? 'Arquivo anexado (disponível no MeuPortfólio).'
+                    : '';
+            }
+            $linhas[] = '• '.$pergunta->titulo.': '.$valor;
+        }
+
+        return implode("\n", $linhas);
+    }
+
+    private function montarUrlWhatsapp(?string $telefone, string $mensagem): ?string
+    {
+        $digitos = preg_replace('/\D+/', '', (string) $telefone);
+        if ($digitos === '') {
+            return null;
+        }
+        if (strlen($digitos) >= 10 && strlen($digitos) <= 11 && ! str_starts_with($digitos, '55')) {
+            $digitos = '55'.$digitos;
+        }
+
+        return 'https://wa.me/'.$digitos.'?text='.rawurlencode($mensagem);
+    }
+
     private function usuarioPodeParticiparDaProposta(PropostaContrato $proposta): bool
     {
-        if ((int) $proposta->id_usuario_avaliador === (int) Auth::id()) {
+        if ($proposta->id_usuario_avaliador && (int) $proposta->id_usuario_avaliador === (int) Auth::id()) {
             return true;
         }
 

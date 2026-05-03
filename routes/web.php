@@ -52,10 +52,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
 // rotas site PUBLICO
 
 
-Route::get('/login', function () {
-    return view('auth/login');
-});
-
 Route::get('/home', function () {
     return view('home');
 })->name('homepage');
@@ -124,10 +120,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/categorias-posts-portfolio/{categoriaPostPortfolio}', [CategoriaPostPortfolioController::class, 'destroy'])->name('categorias-posts-portfolio.destroy');
 });
 
-//proposta de trampo
-Route::post('/propostas', [PropostaContratoController::class, 'store'])
-    ->middleware('auth')
-    ->name('propostas.store');
+//proposta de trampo (visitante ou solicitante logado)
+Route::post('/propostas', [PropostaContratoController::class, 'store'])->name('propostas.store');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/perguntas-proposta', [PerguntaPropostaContratoController::class, 'index'])->name('perguntas-proposta.index');

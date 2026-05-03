@@ -56,23 +56,32 @@ class UsuarioController extends Controller
     
     private function storeWithTipo(Request $request, $tipoUsuario)
     {
-        $validated = $request->validate([
+        $request->validate([
             'nome' => 'required|string|max:200',
-            'documento' => 'required|string|unique:usuarios',
-            'email' => 'required|email|unique:usuarios',
-            'senha' => 'required|min:6',
+            'documento' => 'required|string|unique:usuarios,documento',
+            'email' => 'required|email|unique:usuarios,email',
+            'senha' => 'required|string|min:6|confirmed',
             'telefone' => 'nullable|string|max:18',
-            'data_nasc' => 'required|date',
-            'sexo_usuario' => 'required|integer',
-         ], [
-            'senha.required' => 'A senha é obrigatória.',
-            'senha.min' => 'Sua senha deve ter ao menos 6 caracteres.',
-            'email.required' => 'O email é obrigatório.',
-            'email.unique' => 'Esse email já está em uso.',
-            'documento.unique' => 'Esse documento já está cadastrado.',
-    ]);
+            'data_nasc' => 'required|date|before:today',
+            'sexo_usuario' => 'required|integer|in:1,2,3',
+        ], [
+            'nome.required' => 'Informe seu nome.',
+            'documento.required' => 'Informe o CPF ou CNPJ.',
+            'documento.unique' => 'Este documento já está cadastrado.',
+            'email.required' => 'Informe seu e-mail.',
+            'email.email' => 'Digite um e-mail válido.',
+            'email.unique' => 'Este e-mail já está em uso.',
+            'senha.required' => 'Defina uma senha.',
+            'senha.min' => 'A senha deve ter pelo menos 6 caracteres.',
+            'senha.confirmed' => 'A confirmação de senha não confere.',
+            'data_nasc.required' => 'Informe sua data de nascimento.',
+            'data_nasc.date' => 'Data de nascimento inválida.',
+            'data_nasc.before' => 'A data de nascimento deve ser anterior a hoje.',
+            'sexo_usuario.required' => 'Selecione uma opção de gênero.',
+            'sexo_usuario.in' => 'Selecione uma opção de gênero válida.',
+        ]);
         $usuario = new Usuario();
-        $usuario->fill($request->except('senha'));
+        $usuario->fill($request->except(['senha', 'senha_confirmation']));
         $usuario->senha = Hash::make($request->senha);
         $usuario->tipo_usuario = $tipoUsuario; 
         $usuario->save();

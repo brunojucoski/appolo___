@@ -62,4 +62,14 @@ public function feedbackArtista()
         return $this->hasMany(TimelinePropostaContrato::class, 'id_proposta')->orderBy('created_at')->orderBy('id');
     }
 
+    /**
+     * Proposta feita por visitante sem cadastro (usuário interno "Não se identificou").
+     */
+    public function ehPropostaSemIdentificacao(): bool
+    {
+        $anonId = Usuario::idVisitanteNaoIdentificado();
+
+        return $anonId !== null && (int) $this->id_usuario_avaliador === (int) $anonId;
+    }
+
 }

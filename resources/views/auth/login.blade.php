@@ -1,60 +1,88 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Login — MeuPortfólio</title>
     <link href="{{ asset('css/cadastro.css') }}" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-
 </head>
+<body class="auth-login-page">
 
 @include('Components.navbarbootstrap')
 
-<body>
-<main class="cadastro-container ">
-        <div class="left-illustration">
-            <img src="{{ asset('imgs/cadastre.jpg') }}" alt="Ilustração Artista">
-        </div>
-        
-        <div class="form-section" id="formulario-login" >
-        <h2>Login</h2>
+<main class="cadastro-container">
+    <div class="left-illustration">
+        <img src="{{ asset('imgs/sacredheart.png') }}" alt="Ilustração">
+    </div>
+
+    <div class="form-section" id="formulario-login">
+        <h1 class="form-title h2">Login</h1>
+
+        @if (session('status'))
+            <div class="login-validation-banner" style="color: #0f5132; border-color: #badbcc; background: #d1e7dd;">
+                {{ session('status') }}
+            </div>
+        @endif
+
         @if (session('success'))
-            <div style="background-color: #d4edda; color: #155724; padding: 0.75rem; border-radius: 5px; margin-bottom: 1rem;">
+            <div class="login-validation-banner" style="color: #0f5132; border-color: #badbcc; background: #d1e7dd;">
                 {{ session('success') }}
             </div>
         @endif
-        <form action="{{ route('login') }}" method="POST">
+
+        @if ($errors->any())
+            <div class="login-validation-banner" role="alert">
+                @foreach ($errors->all() as $erro)
+                    <p class="mb-1 mb-md-0">{{ $erro }}</p>
+                @endforeach
+            </div>
+        @endif
+
+        <form action="{{ route('login') }}" method="POST" novalidate>
             @csrf
-            <label for="email">Email : </label>
-            <input type="email" name="email" placeholder="Email" required>
 
-            <label for="senha">Senha : </label>
-            <input type="password" name="password" placeholder="Senha" required>
+            <label for="email" class="form-label mb-1">E-mail</label>
+            <input
+                type="email"
+                name="email"
+                id="email"
+                class="form-control @error('email') is-invalid @enderror"
+                placeholder="seu@email.com"
+                value="{{ old('email') }}"
+                required
+                autocomplete="username"
+            >
 
-       
+            <label for="password" class="form-label mb-1">Senha</label>
+            <input
+                type="password"
+                name="password"
+                id="password"
+                class="form-control @error('password') is-invalid @enderror"
+                placeholder="Senha"
+                required
+                autocomplete="current-password"
+            >
 
-            <button type="submit" class="submit-btn">Fazer login</button>
+            <button type="submit" class="submit-btn">Entrar</button>
         </form>
 
-        <hr style="margin: 1.5rem 0; border-color: rgba(255, 255, 255, 0.2);">
+        <hr class="my-4 opacity-25">
 
-
-            <div class="button-group"> 
-                <a href="{{ route('usuarios.createArtista') }}">
-                     <button type="button" class="cadastro-button">Cadastro Artista</button>
-                 </a>
-
-                 <a href="{{ route('usuarios.createContratante') }}">
-                     <button type="button" class="cadastro-button ">Cadastro Solicitante</button>
-                 </a>
-            </div>
+        <div class="button-group">
+            <a href="{{ route('usuarios.createArtista') }}" class="text-decoration-none">
+                <button type="button" class="cadastro-button">Cadastro artista</button>
+            </a>
+            <a href="{{ route('usuarios.createContratante') }}" class="text-decoration-none">
+                <button type="button" class="cadastro-button">Cadastro solicitante</button>
+            </a>
+        </div>
     </div>
-
 </main>
-</body>
-    @include('Components.footer')
- 
 
+@include('Components.footer')
+
+</body>
 </html>

@@ -3,115 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Cadastro artista — MeuPortfólio</title>
     <link href="{{ asset('css/cadastro.css') }}" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/imask"></script>
 </head>
+<body>
 
 @include('Components.navbarbootstrap')
 
-
-
-
-@if(session('success'))
-  <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-          <div class="modal-content">
-              <div class="modal-header">
-                  <h5 class="text-nome" id="successModalLabel"> MeuPortfólio </h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                  {{ session('success') }}
-              </div>
-              <div class="modal-footer">
-                  <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal"> Fechar </button>
-              </div>
-          </div>
-      </div>
-  </div>
-
-  <script>
-      document.addEventListener("DOMContentLoaded", function() {
-          var successModal = new bootstrap.Modal(document.getElementById('successModal'));
-          successModal.show();
-      });
-  </script>
-@endif
-
-
-
- 
-@if ($errors->any())
-      <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-          <div class="modal-content">
-              <div class="modal-header">
-                  <h5 class="text-nome" id="successModalLabel"> MeuPortfólio </h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                     @foreach ($errors->all() as $erro)
-                <li>{{ $erro }}</li>
-            @endforeach
-              </div>
-              <div class="modal-footer">
-                  <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal"> Fechar </button>
-              </div>
-          </div>
-      </div>
-  </div>
-        <script>
-      document.addEventListener("DOMContentLoaded", function() {
-          var successModal = new bootstrap.Modal(document.getElementById('successModal'));
-          successModal.show();
-      });
-  </script>
-       
-@endif
-        
-
-
-
-
-
-
-
-
-
-
 <main class="cadastro-container">
     <div class="left-illustration">
-        <img src="{{ asset('imgs/artistacadastro.jpg') }}" alt="Ilustração Artista">
+        <img src="{{ asset('imgs/artistacadastro.png') }}" alt="Ilustração Artista">
     </div>
 
     <div class="form-section" id="formulario-login">
-        <h1 class="form-title">Cadastre-se Artista !</h1>
+        <h1 class="form-title">Cadastre-se como artista</h1>
+
+        @include('Components.form-validation-summary')
+
         <form id="form-cadastro" action="{{ route('usuarios.storeArtista') }}" method="POST">
             @csrf
 
-            <input type="text" name="nome" placeholder="Nome" required>
+            <label class="form-label small mb-1">Nome</label>
+            <input type="text" name="nome" placeholder="Nome completo" required
+                   class="form-control @error('nome') is-invalid @enderror"
+                   value="{{ old('nome') }}">
 
-            <div class="gender-options">
-                <label><input type="radio" name="sexo_usuario" value="1" required> Masculino</label>
-                <label><input type="radio" name="sexo_usuario" value="2"> Feminino</label>
-                <label><input type="radio" name="sexo_usuario" value="3"> Não informar</label>
+            <div class="gender-options mt-2">
+                <label><input type="radio" name="sexo_usuario" value="1" @checked(old('sexo_usuario') == '1') required> Masculino</label>
+                <label><input type="radio" name="sexo_usuario" value="2" @checked(old('sexo_usuario') == '2')> Feminino</label>
+                <label><input type="radio" name="sexo_usuario" value="3" @checked(old('sexo_usuario') == '3')> Não informar</label>
             </div>
 
-            <input type="email" name="email" placeholder="Email" required>
+            <label class="form-label small mb-1">E-mail</label>
+            <input type="email" name="email" placeholder="E-mail" required
+                   class="form-control @error('email') is-invalid @enderror"
+                   value="{{ old('email') }}">
 
-            <input type="text" id="telefone" name="telefone" placeholder="Telefone" maxlength="15" inputmode="numeric">
-           
-            <input type="text" id="documento" name="documento" placeholder="CPF/CNPJ" maxlength="18">
+            <label class="form-label small mb-1">Telefone</label>
+            <input type="text" id="telefone" name="telefone" placeholder="Telefone" maxlength="15" inputmode="numeric"
+                   class="form-control @error('telefone') is-invalid @enderror"
+                   value="{{ old('telefone') }}">
 
-            <input type="date" name="data_nasc" placeholder="Data de Nascimento" required>
+            <label class="form-label small mb-1">CPF ou CNPJ</label>
+            <input type="text" id="documento" name="documento" placeholder="CPF/CNPJ" maxlength="18"
+                   class="form-control @error('documento') is-invalid @enderror"
+                   value="{{ old('documento') }}">
 
-            <input type="password" name="senha" placeholder="Senha" required>
-            <input type="password" name="senha_confirmation" placeholder="Confirmar senha" required>
+            <label class="form-label small mb-1">Data de nascimento</label>
+            <input type="date" name="data_nasc" required
+                   class="form-control @error('data_nasc') is-invalid @enderror"
+                   value="{{ old('data_nasc') }}">
+
+            <label class="form-label small mb-1">Senha</label>
+            <input type="password" name="senha" placeholder="Senha (mín. 6 caracteres)" required
+                   class="form-control @error('senha') is-invalid @enderror"
+                   autocomplete="new-password">
+
+            <label class="form-label small mb-1">Confirmar senha</label>
+            <input type="password" name="senha_confirmation" placeholder="Repita a senha" required
+                   class="form-control"
+                   autocomplete="new-password">
 
             <button type="submit" class="submit-btn">Criar conta</button>
 
-            <p class="login-link">Já tem conta? <a href="{{ route('login') }}">Conecte-se</a></p>
+            <p class="login-link">Já tem conta? <a href="{{ route('login') }}">Entrar</a></p>
         </form>
     </div>
 
@@ -120,12 +78,10 @@
         const documentoInput = document.getElementById('documento');
         const telefoneInput = document.getElementById('telefone');
 
-     //imask telefone
         const telefoneMask = IMask(telefoneInput, {
             mask: '(00) 00000-0000'
         });
 
-        // Máscara CPF/CNPJ
         documentoInput.addEventListener('input', function () {
             let value = documentoInput.value.replace(/\D/g, '');
 
@@ -133,9 +89,9 @@
                 documentoInput.value = value.replace(/(\d{0,3})(\d{0,3})(\d{0,3})(\d{0,2})/, function (_, p1, p2, p3, p4) {
                     let result = '';
                     if (p1) result += p1;
-                    if (p2) result += `.${p2}`;
-                    if (p3) result += `.${p3}`;
-                    if (p4) result += `-${p4}`;
+                    if (p2) result += '.' + p2;
+                    if (p3) result += '.' + p3;
+                    if (p4) result += '-' + p4;
                     return result;
                 });
             } else {
@@ -143,23 +99,23 @@
                 documentoInput.value = value.replace(/(\d{0,2})(\d{0,3})(\d{0,3})(\d{0,4})(\d{0,2})/, function (_, p1, p2, p3, p4, p5) {
                     let result = '';
                     if (p1) result += p1;
-                    if (p2) result += `.${p2}`;
-                    if (p3) result += `.${p3}`;
-                    if (p4) result += `/${p4}`;
-                    if (p5) result += `-${p5}`;
+                    if (p2) result += '.' + p2;
+                    if (p3) result += '.' + p3;
+                    if (p4) result += '/' + p4;
+                    if (p5) result += '-' + p5;
                     return result;
                 });
             }
         });
 
-        // Limpa as máscaras antes de enviar o formulário
         form.addEventListener('submit', function () {
             documentoInput.value = documentoInput.value.replace(/\D/g, '');
-            telefoneInput.value = telefoneMask.unmaskedValue; // <-- valor limpo do IMask
+            telefoneInput.value = telefoneMask.unmaskedValue;
         });
     </script>
 </main>
 
 @include('Components.footer')
 
+</body>
 </html>

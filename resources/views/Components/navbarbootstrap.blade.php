@@ -76,14 +76,16 @@
             <div class="offcanvas-body">
                 <ul class="navbar-nav justify-content-left flex-grow-1 pe-3">
                     <li class="nav-item">
-                        <a class="nav-link mx-lg-2" aria-current="page" href="{{ route('usuarios.publico') }}">Artistas</a>
+                        <a class="nav-link mx-lg-2" aria-current="page" href="{{ route('usuarios.publico') }}">Buscar portfólios</a>
                     </li>
-                    <li class="nav-item">
+               <!--     <li class="nav-item">
                         <a class="nav-link mx-lg-2" href="{{ route('usuarios.contratantes') }}">Solicitantes</a>
                     </li>
+                    -->
                     <li class="nav-item">
                         <a class="nav-link mx-lg-2" href="{{ route('sobrepage') }}">Sobre</a>
                     </li>
+                    
                 </ul>
 
                 <ul class="navbar-nav d-none d-lg-flex ms-auto align-items-center">

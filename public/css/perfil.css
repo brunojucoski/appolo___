@@ -3,8 +3,8 @@
 
 
 :root {
-  --roxo-appolo: #7d58b9;
-    --roxo-claro: #997ebd;
+  --roxo-appolo: #6d2e2e;
+  --roxo-claro: #8f4444;
     --branco: #ffffff;
     --preto: #000000;
     --cinza-claro: #f5f5f5;
@@ -343,8 +343,8 @@ main {
 
 
 :root {
-    --roxo-appolo: #7d58b9;
-    --roxo-claro: #997ebd;
+  --roxo-appolo: #6d2e2e;
+  --roxo-claro: #8f4444;
     --branco: #fff;
     --preto: #000000;
     --cinza-claro: #f5f5f5;
@@ -356,7 +356,7 @@ main {
 
   
 .navbar {
-    background-color: none !important; 
+  background-color: white !important; 
     height: 100px !important;
     /* margin: 15px;
     padding: 1rem !important;
@@ -402,7 +402,7 @@ main {
 }
 
 .nav-link {
-    color: #544468 !important;
+    color: var(--roxo-appolo) !important;
     font-weight: 500 !important;
     position: relative !important; 
     font-family: "Jost", sans-serif !important;

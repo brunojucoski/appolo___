@@ -19,7 +19,7 @@
            
             <div class="col-md-6 text-center ">
 
-              <img src="imgs/sobre.jpg" alt="Background" class="img-fluid" style="max-height: 1000px;" />
+              <img src="imgs/sobre.png" alt="Background" class="img-fluid" style="max-height: 1000px;" />
             </div>
 
 

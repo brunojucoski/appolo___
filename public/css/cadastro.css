@@ -5,8 +5,8 @@
 
 
 :root {
-    --roxo-appolo: #7d58b9;
-    --roxo-claro: #997ebd;
+    --roxo-appolo: #6d2e2e;
+    --roxo-claro: #8f4444;
     --branco: #fff;
     --preto: #000000;
     --cinza-claro: #f5f5f5;
@@ -21,6 +21,42 @@
     align-items: center !important;
   }
   
+
+.cadastro-validation-summary {
+    background: rgba(255, 255, 255, 0.95);
+    color: #842029;
+    border: 1px solid #f5c2c7;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+}
+
+.cadastro-validation-summary ul {
+    margin-bottom: 0;
+}
+
+.form-section .field-hint-invalid {
+    display: block;
+    font-size: 0.85rem;
+    color: #ffc9c9;
+    margin-top: -10px;
+    margin-bottom: 12px;
+}
+
+.form-section input.is-invalid,
+.form-section input.form-control.is-invalid {
+    border: 2px solid #dc3545 !important;
+    box-shadow: 0 0 0 1px rgba(220, 53, 69, 0.35);
+}
+
+.login-validation-banner {
+    background: rgba(255, 255, 255, 0.95);
+    color: #842029;
+    border: 1px solid #f5c2c7;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
 
 .cadastro-container {
     display: flex;
@@ -168,7 +204,7 @@ form input[type="password"] {
 
     
 .navbar {
-    background-color: none !important;
+    background-color: white !important; 
     height: 100px !important;
     /* margin: 15px;
     padding: 1rem !important;
@@ -214,7 +250,7 @@ form input[type="password"] {
 }
 
 .nav-link {
-    color: #544468 !important;
+    color: var(--roxo-appolo)!important;
     font-weight: 500 !important;
     position: relative !important; 
     font-family: "Jost", sans-serif !important;
@@ -300,9 +336,13 @@ form input[type="password"] {
     font-family: "Jost", sans-serif !important;
     display: flex;
     justify-content: center;
-    align-items: center;
-    width: 100%;
+  
+    width: 100% !important;
     
+}
+
+#formulario-login .form-control {
+    width: 100%;
 }
 
 .nav-item {
@@ -338,7 +378,7 @@ form input[type="password"] {
         transform: translateX(-50%) !important;
         width: 0 !important;
         height: 2px !important;
-        background-color: #ab7aeb !important;
+        background-color: var(--roxo-claro) !important;
         visibility: hidden !important;
         transition: 0.3s ease-in-out !important;
     }

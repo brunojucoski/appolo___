@@ -149,10 +149,17 @@
             <p class="text-muted">Nenhuma proposta encontrada.</p>
         @else
             @foreach($propostas as $proposta)
+                @php $semCadastroVisitante = $proposta->ehPropostaSemIdentificacao(); @endphp
                 <div class="card-proposta">
                     <h5>Proposta #{{ $proposta->id }}</h5>
                     <p class="text-muted small mb-2">Enviada em {{ $proposta->created_at->format('d/m/Y H:i') }}</p>
                     <p><strong>Status:</strong> <span class="status-label">{{ $proposta->status }}</span></p>
+
+                    @if($semCadastroVisitante)
+                        <div class="alert alert-info small py-2 mb-2">
+                            Orçamento enviado sem cadastro na plataforma. Combine aceite, valores e prazos diretamente com a pessoa pelo WhatsApp; resposta pela plataforma, timeline e conclusão pelo site não estão disponíveis neste caso.
+                        </div>
+                    @endif
 
                     @if($proposta->motivo)
                         <p><strong>Motivo / observações (resposta do artista):</strong> {{ $proposta->motivo }}</p>
@@ -180,9 +187,9 @@
                     @endif
 
                     @if($usuario->tipo_usuario == 2)
-                        <p class="mt-2"><strong>Solicitante:</strong> {{ $proposta->usuarioAvaliador->nome ?? 'Desconhecido' }}</p>
+                        <p class="mt-2"><strong>Solicitante:</strong> {{ $proposta->usuarioAvaliador->nome ?? 'Não se identificou' }}</p>
 
-                        @if($proposta->status === 'Aguardando resposta')
+                        @if($proposta->status === 'Aguardando resposta' && ! $semCadastroVisitante)
                             <button type="button" class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#responderModal{{ $proposta->id }}">
                                 Responder Proposta
                             </button>
@@ -192,10 +199,12 @@
                     @endif
 
                     <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#timelineModal{{ $proposta->id }}">
-                            <i class="bi bi-chat-left-text"></i> Ver timeline
-                        </button>
-                        @if($usuario->tipo_usuario == 2 && $proposta->status === 'Aguardando execução')
+                        @if(! $semCadastroVisitante)
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#timelineModal{{ $proposta->id }}">
+                                <i class="bi bi-chat-left-text"></i> Ver timeline
+                            </button>
+                        @endif
+                        @if($usuario->tipo_usuario == 2 && $proposta->status === 'Aguardando execução' && ! $semCadastroVisitante)
                             <form action="{{ route('propostas.finalizar', $proposta) }}" method="POST" class="d-inline" onsubmit="return confirm('Marcar esta proposta como concluída? O solicitante será notificado e poderá enviar feedback.');">
                                 @csrf
                                 <button type="submit" class="btn btn-outline-custom btn-sm">Marcar como concluída</button>
@@ -204,6 +213,7 @@
                     </div>
                 </div>
 
+                @if(! $semCadastroVisitante)
                 <div class="modal fade" id="timelineModal{{ $proposta->id }}" tabindex="-1" aria-labelledby="timelineModalLabel{{ $proposta->id }}" aria-hidden="true">
                     <div class="modal-dialog modal-lg modal-dialog-scrollable">
                         <div class="modal-content">
@@ -234,8 +244,9 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
-                @if($usuario->tipo_usuario == 2 && $proposta->status === 'Aguardando resposta')
+                @if($usuario->tipo_usuario == 2 && $proposta->status === 'Aguardando resposta' && ! $semCadastroVisitante)
                     <!-- Modal de Resposta -->
                     <div class="modal fade p-5 "  id="responderModal{{ $proposta->id }}" tabindex="-1" aria-labelledby="responderModalLabel{{ $proposta->id }}" aria-hidden="true">
                         <div class="modal-dialog modal-lg">
