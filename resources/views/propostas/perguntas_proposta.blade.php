@@ -114,7 +114,7 @@
             </div>
         </div>
     @empty
-        <p class="text-muted">Nenhuma pergunta ainda. Adicione ao menos uma para o botão <strong>Contratar</strong> aparecer no seu perfil.</p>
+        <p class="text-muted">Nenhuma pergunta ainda. Adicione ao menos uma para o botão <strong>Enviar orçamento</strong> aparecer no seu perfil.</p>
     @endforelse
 
     <a href="{{ route('usuarios.perfilPublico', Auth::id()) }}" class="btn btn-outline-secondary mt-3">Voltar ao perfil</a>

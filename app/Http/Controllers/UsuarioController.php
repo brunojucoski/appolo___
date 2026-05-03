@@ -83,12 +83,17 @@ class UsuarioController extends Controller
         $usuario = new Usuario();
         $usuario->fill($request->except(['senha', 'senha_confirmation']));
         $usuario->senha = Hash::make($request->senha);
-        $usuario->tipo_usuario = $tipoUsuario; 
+        $usuario->tipo_usuario = $tipoUsuario;
         $usuario->save();
-    
-        $token = $usuario->createToken('token')->plainTextToken;
-    
-        return redirect()->route('login')->with('success', 'Usuário criado com sucesso!');
+
+        $usuario->createToken('token')->plainTextToken;
+
+        Auth::login($usuario);
+        $request->session()->regenerate();
+
+        return redirect()
+            ->route('perfil')
+            ->with('success', 'Conta criada com sucesso! Você já está conectado.');
     }
     
 

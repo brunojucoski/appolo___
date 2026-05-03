@@ -109,7 +109,7 @@
     {{-- Filtros --}}
   <form id="formFiltrosPropostas" method="GET" action="{{ route('propostas.minhas') }}" class="row g-3 mb-4">
     <div class="col-md-4">
-        <label for="status" class="form-label">Status da Proposta</label>
+        <label for="status" class="form-label">Status do orçamento</label>
         <select name="status" id="status" class="form-select">
             <option value="">Todos</option>
             <option value="Aguardando resposta" {{ request('status') == 'Aguardando resposta' ? 'selected' : '' }}>Aguardando resposta</option>
