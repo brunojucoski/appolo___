@@ -6,10 +6,19 @@
     <link href="{{ asset('css/perfil.css') }}" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+@php
+    $portfolio = $usuario->portfolioArtista;
+    $corPrimariaPortfolio = preg_match('/^#[0-9A-Fa-f]{6}$/', (string) ($portfolio->cor_primaria_portfolio ?? ''))
+        ? $portfolio->cor_primaria_portfolio
+        : '#6d2e2e';
+    $corSecundariaPortfolio = preg_match('/^#[0-9A-Fa-f]{6}$/', (string) ($portfolio->cor_secundaria_portfolio ?? ''))
+        ? $portfolio->cor_secundaria_portfolio
+        : '#8f4444';
+@endphp
+<body style="--roxo-appolo: {{ $corPrimariaPortfolio }}; --roxo-claro: {{ $corSecundariaPortfolio }};">
 @include('Components.navbarbootstrap')
 
-<main>
+<main class="perfil-publico-page">
 
     {{-- Funções de formatação (mantidas) --}}
     @php
@@ -22,10 +31,6 @@
                 ? preg_replace('/(\d{2})(\d{5})(\d{4})/', '($1) $2-$3', $tel)
                 : preg_replace('/(\d{2})(\d{4})(\d{4})/', '($1) $2-$3', $tel);
         }
-    @endphp
-
-    @php
-        $portfolio = $usuario->portfolioArtista;
     @endphp
 
   
@@ -117,15 +122,15 @@
 
 
     {{-- 1. SEÇÃO PRINCIPAL DE INFORMAÇÕES DO PERFIL (TOPO DA PÁGINA) --}}
-    <div class="p-3">
-        <section class="py-5">
+    <div class="p-3 perfil-header-wrap">
+        <section class="py-5 perfil-header-section">
             <div class="container">
                 <div class="row align-items-center">
                     <div class="col-md-3 text-center text-md-start mb-4 mb-md-0 imagem_perfil">
                         <img src="{{ $usuario->foto_perfil && file_exists(public_path('storage/' . $usuario->foto_perfil)) ? asset('storage/' . $usuario->foto_perfil) : asset('imgs/user.png') }}" class="rounded-circle  profile-img" alt="Perfil">
                     </div>
                     <div class="col-md-9">
-                        <h1 class="text-nome">{{ $usuario->nome }} </h1>
+                        <h1 class="text-nome" style="padding-top: 50px !important">{{ $usuario->nome }} </h1>
 
                         @if($usuario->tipo_usuario == 2)
                             <h3 class="text-nome"> {{ $portfolio->nome_artistico ?? '' }} </h3>
@@ -226,7 +231,7 @@
                         {{-- Categorias (mantidas) --}}
                         @if($usuario->tipo_usuario == 2)
                             @if($usuario->categoriasArtisticas && $usuario->categoriasArtisticas->count() > 0)
-                                <div class="mb-3 p-3">
+                                <div class="mb-3 p-3 perfil-areas-atuacao">
                                     <label class="form-label">Áreas de atuação : </label>
                                     <div class="d-flex flex-wrap gap-2">
                                         @foreach ($usuario->categoriasArtisticas as $cat)
@@ -255,7 +260,7 @@
             $exibirBlocoPortfolio = $portfolio && $usuario->tipo_usuario == 2;
         @endphp
         @if($exibirBlocoPortfolio)
-            <div class=" align-itens-center text-center">
+            <div class="align-itens-center text-center perfil-portfolio-header">
                 <div class="d-flex flex-wrap justify-content-center align-items-center gap-2">
                     <h3 class="text-nome mb-0"> Portfólio </h3>
                     @auth
@@ -280,34 +285,29 @@
                     </div>
                 </div>
             @elseif($categoriasPortfolio->isNotEmpty())
-                <section class="py-2">
+                <section class="py-2 perfil-portfolio-categorias-section">
                     <div class="container">
-                        <h4 class="text-nome h5 text-center mb-4"></h4>
                         <div class="row g-4">
                             @foreach($categoriasPortfolio as $cat)
                                 @php
-                                    $cover = $cat->coverPost;
-                                    $thumb = $cover && $cover->imagens->isNotEmpty()
-                                        ? asset('storage/' . $cover->imagens->first()->caminho_imagem)
-                                        : null;
+                                    $previewImages = $portfolio->posts
+                                        ->where('id_categoria_post_portfolio', $cat->id)
+                                        ->flatMap(fn ($post) => $post->imagens)
+                                        ->take(3)
+                                        ->values();
                                 @endphp
-                                <div class="col-md-4">
-                                    <a href="{{ route('usuarios.perfilPublico', ['id' => $usuario->id, 'categoria' => $cat->id]) }}" class="text-decoration-none text-dark">
-                                        <div class="card shadow-sm h-100 overflow-hidden">
-                                            @if($thumb)
-                                                <img src="{{ $thumb }}" alt="" class="card-img-top gallery-img" style="height: 200px; object-fit: cover;">
-                                            @else
-                                                <div class="bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 200px;">
-                                                    <i class="bi bi-images fs-1 text-muted"></i>
-                                                </div>
-                                            @endif
-                                            <div class="card-body">
-                                                <h5 class="card-title">{{ $cat->nome }}</h5>
-                                                @if($cat->descricao)
-                                                    <p class="card-text small text-muted mb-0">{{ \Illuminate\Support\Str::limit($cat->descricao, 120) }}</p>
-                                                @endif
-                                            </div>
-                                        </div>
+                                <div class="col-md-4 perfil-categoria-card-col">
+                                    <a href="{{ route('usuarios.perfilPublico', ['id' => $usuario->id, 'categoria' => $cat->id]) }}"
+                                       class="perfil-categoria-card"
+                                       aria-label="Ver categoria {{ $cat->nome }}">
+                                        <span class="perfil-categoria-preview-stack {{ $previewImages->isEmpty() ? 'perfil-categoria-preview-empty' : '' }}" aria-hidden="true">
+                                            @foreach($previewImages as $previewIndex => $previewImage)
+                                                <span class="perfil-categoria-preview-foto perfil-categoria-preview-foto-{{ $previewIndex + 1 }}"
+                                                      style="background-image: url('{{ asset('storage/' . $previewImage->caminho_imagem) }}');"></span>
+                                            @endforeach
+                                        </span>
+                                        <span class="perfil-categoria-overlay" aria-hidden="true"></span>
+                                        <span class="perfil-categoria-title">{{ $cat->nome }}</span>
                                     </a>
                                 </div>
                             @endforeach
@@ -317,7 +317,7 @@
             @endif
 
         @if($posts->count() > 0)
-            <section class=" bg-light">
+            <section class="bg-light perfil-posts-section">
                 <div class="container">
                     @if(!$categoriaAtiva && $categoriasPortfolio->isNotEmpty())
                         <h4 class="text-nome h5 text-center mb-4">Posts</h4>
@@ -657,6 +657,33 @@
                         <div class="mb-3">
                             <label for="link_behance" class="form-label">Link Pessoal</label>
                             <input type="text" name="link_behance" class="form-control" value="{{ $portfolio->link_behance ?? '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cores do perfil</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="cor_primaria_portfolio" class="form-label small text-muted mb-1">Cor principal</label>
+                                    <input
+                                        type="color"
+                                        name="cor_primaria_portfolio"
+                                        id="cor_primaria_portfolio"
+                                        class="form-control form-control-color"
+                                        value="{{ $corPrimariaPortfolio }}"
+                                        title="Escolha a cor principal do perfil"
+                                    >
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="cor_secundaria_portfolio" class="form-label small text-muted mb-1">Cor secundaria</label>
+                                    <input
+                                        type="color"
+                                        name="cor_secundaria_portfolio"
+                                        id="cor_secundaria_portfolio"
+                                        class="form-control form-control-color"
+                                        value="{{ $corSecundariaPortfolio }}"
+                                        title="Escolha a cor secundaria do perfil"
+                                    >
+                                </div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Categorias que você atua</label>

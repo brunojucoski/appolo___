@@ -18,6 +18,8 @@ class PortfolioArtista extends Model
         'descricao',
         'link_instagram',
         'link_behance',
+        'cor_primaria_portfolio',
+        'cor_secundaria_portfolio',
     ];
 
     public function usuario()

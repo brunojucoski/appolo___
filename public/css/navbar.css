@@ -111,7 +111,7 @@
   }
   
   .btn-outline-custom:hover {
-    background-color: var(--roxo-appolo) !important;
+    background-color: var(--roxo-claro) !important;
     color: var(--branco) !important;
   }
   

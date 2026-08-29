@@ -10,6 +10,14 @@ use App\Models\CategoriaArtistica;
 
 class PortfolioArtistaController extends Controller
 {
+    private const CAMPOS_PORTFOLIO = [
+        'nome_artistico',
+        'descricao',
+        'link_instagram',
+        'link_behance',
+        'cor_primaria_portfolio',
+        'cor_secundaria_portfolio',
+    ];
 
     
     public function index()
@@ -45,16 +53,14 @@ class PortfolioArtistaController extends Controller
             'descricao' => 'nullable|string',
             'link_instagram' => 'nullable|url',
             'link_behance' => 'nullable|url',
+            'cor_primaria_portfolio' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'cor_secundaria_portfolio' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'categorias' => 'array|nullable'
         ]);
 
-        PortfolioArtista::create([
+        PortfolioArtista::create(array_merge($request->only(self::CAMPOS_PORTFOLIO), [
             'id_usuario' => Auth::id(),
-            'nome_artistico' => $request->nome_artistico,
-            'descricao' => $request->descricao,
-            'link_instagram' => $request->link_instagram,
-            'link_behance' => $request->link_behance,
-        ]);
+        ]));
 
         Auth::user()->categoriasArtisticas()->sync($request->categorias);
 
@@ -86,11 +92,13 @@ class PortfolioArtistaController extends Controller
             'descricao' => 'nullable|string',
             'link_instagram' => 'nullable|url',
             'link_behance' => 'nullable|url',
+            'cor_primaria_portfolio' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'cor_secundaria_portfolio' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'categorias' => 'array|nullable'
         ]);
     
         $portfolio = PortfolioArtista::findOrFail($id);
-        $portfolio->update($request->only('nome_artistico', 'descricao', 'link_instagram', 'link_behance'));
+        $portfolio->update($request->only(self::CAMPOS_PORTFOLIO));
     
         Auth::user()->categoriasArtisticas()->sync($request->categorias);
     
