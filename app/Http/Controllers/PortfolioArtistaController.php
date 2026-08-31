@@ -17,6 +17,7 @@ class PortfolioArtistaController extends Controller
         'link_behance',
         'cor_primaria_portfolio',
         'cor_secundaria_portfolio',
+        'estilo_card_categorias_portfolio',
     ];
 
     
@@ -55,14 +56,16 @@ class PortfolioArtistaController extends Controller
             'link_behance' => 'nullable|url',
             'cor_primaria_portfolio' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'cor_secundaria_portfolio' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'categorias' => 'array|nullable'
+            'estilo_card_categorias_portfolio' => 'nullable|integer|in:1,2,3',
+            'categorias' => 'array|nullable',
+            'categorias_form' => 'nullable|boolean',
         ]);
 
         PortfolioArtista::create(array_merge($request->only(self::CAMPOS_PORTFOLIO), [
             'id_usuario' => Auth::id(),
         ]));
 
-        Auth::user()->categoriasArtisticas()->sync($request->categorias);
+        Auth::user()->categoriasArtisticas()->sync($request->input('categorias', []));
 
         return redirect()->back()->with('success', 'Portfólio criado com sucesso!');
     }
@@ -94,13 +97,17 @@ class PortfolioArtistaController extends Controller
             'link_behance' => 'nullable|url',
             'cor_primaria_portfolio' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'cor_secundaria_portfolio' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'categorias' => 'array|nullable'
+            'estilo_card_categorias_portfolio' => 'nullable|integer|in:1,2,3',
+            'categorias' => 'array|nullable',
+            'categorias_form' => 'nullable|boolean',
         ]);
     
         $portfolio = PortfolioArtista::findOrFail($id);
         $portfolio->update($request->only(self::CAMPOS_PORTFOLIO));
     
-        Auth::user()->categoriasArtisticas()->sync($request->categorias);
+        if ($request->boolean('categorias_form')) {
+            Auth::user()->categoriasArtisticas()->sync($request->input('categorias', []));
+        }
     
         return redirect()->back()->with('success', 'Portfólio atualizado com sucesso!');
     }

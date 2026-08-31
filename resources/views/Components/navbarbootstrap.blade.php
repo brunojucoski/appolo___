@@ -7,6 +7,8 @@
     <title>@yield('title', 'Appolo')</title>
    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+    <link href="{{ asset('css/endereco-map.css') }}" rel="stylesheet">
 
 
 </head>
@@ -223,7 +225,7 @@
 
 
         
-        <form method="POST" action="{{ route('usuarios.update', Auth::user()->id) }}" enctype="multipart/form-data" class="text-start">
+        <form method="POST" action="{{ route('usuarios.update', Auth::user()->id) }}" enctype="multipart/form-data" class="text-start" data-address-form>
                         @csrf
                         @method('PUT')
 
@@ -267,7 +269,7 @@
             
             <div class="mb-3">
                             <label class="form-label">CEP</label>
-                            <input type="text" name="cep" onblur="buscarCEP(this.value)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); }" class="form-control" value="{{  Auth::user()->cep }}" maxlength="9" inputmode="numeric">
+                            <input type="text" name="cep" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); }" class="form-control" value="{{  Auth::user()->cep }}" maxlength="9" inputmode="numeric">
                         </div>
 
                         <div class="mb-3">
@@ -283,6 +285,18 @@
                         <div class="mb-3">
                             <label class="form-label">Endereço</label>
                             <input type="text" name="endereco" class="form-control" value="{{  Auth::user()->endereco }}">
+                        </div>
+
+                        <input type="hidden" name="latitude" value="{{ Auth::user()->latitude }}">
+                        <input type="hidden" name="longitude" value="{{ Auth::user()->longitude }}">
+
+                        <div class="mb-3">
+                            <label class="form-label">Localização no mapa</label>
+                            <div class="address-map-card">
+                                <div class="address-map" data-address-map></div>
+                                <p class="address-map-help">Clique no mapa ou arraste o ponto para ajustar a localização.</p>
+                            </div>
+                            <div class="address-map-status mt-1" data-address-status></div>
                         </div>
 
                         <div class="mb-3">
@@ -403,6 +417,9 @@
 
 
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ asset('js/endereco-map.js') }}"></script>
+
 <script>
     function carregarNotificacoes() {
         fetch('/notificacoes')
@@ -472,22 +489,11 @@
 
 
 document.addEventListener('DOMContentLoaded', function () {
-    const cepInput = document.querySelector('input[name="cep"]');
     const telefoneInput = document.querySelector('input[name="telefone"]');
 
-    // Máscara de CEP
-    cepInput.addEventListener('input', function (e) {
-        let value = e.target.value.replace(/\D/g, '');
-
-        if (value.length > 5) {
-            value = value.slice(0, 5) + '-' + value.slice(5, 8);
-        }
-
-        e.target.value = value;
-    });
-
     // Máscara de Telefone (formato: (00)00000-0000)
-    telefoneInput.addEventListener('input', function (e) {
+    if (telefoneInput) {
+      telefoneInput.addEventListener('input', function (e) {
         let value = e.target.value.replace(/\D/g, ''); // remove tudo que não for número
 
         if (value.length > 11) value = value.slice(0, 11); // limita a 11 dígitos
@@ -501,9 +507,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         e.target.value = value;
-    });
+      });
 
-    telefoneInput.setAttribute('maxlength', '15'); // (00)00000-0000 tem 14 caracteres
+      telefoneInput.setAttribute('maxlength', '15'); // (00)00000-0000 tem 14 caracteres
+    }
 });
 
 
@@ -520,41 +527,6 @@ document.addEventListener('DOMContentLoaded', function () {
             reader.readAsDataURL(input.files[0]);
         }
     }
-
-
-//buscaCEP
-function buscarCEP(cep) {
-
-    console.log(`https://viacep.com.br/ws/${cep}/json/`)
-
- fetch(`https://viacep.com.br/ws/${cep}/json/`)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error("Erro ao buscar o CEP.");
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.erro) {
-            alert("CEP não encontrado.");
-            return;
-        }
-
-        const form = document.querySelector('#editOffcanvas form');
-        if (form) {
-            form.querySelector('input[name="cidade"]').value = data.localidade || '';
-            form.querySelector('input[name="bairro"]').value = data.bairro || '';
-            form.querySelector('input[name="endereco"]').value = data.logradouro || '';
-        }
-    })
-    .catch(error => {
-        console.error(error);
-        alert("Erro ao consultar o CEP.");
-    });
-        
-}
-
-
 
 </script>
 

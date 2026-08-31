@@ -14,6 +14,11 @@
     $corSecundariaPortfolio = preg_match('/^#[0-9A-Fa-f]{6}$/', (string) ($portfolio->cor_secundaria_portfolio ?? ''))
         ? $portfolio->cor_secundaria_portfolio
         : '#8f4444';
+    $estilosCardsCategorias = \App\Models\PortfolioArtista::estilosCardsCategorias();
+    $estiloCardCategorias = (int) ($portfolio->estilo_card_categorias_portfolio ?? \App\Models\PortfolioArtista::ESTILO_CARD_CATEGORIA_3D);
+    $estiloCardCategorias = array_key_exists($estiloCardCategorias, $estilosCardsCategorias)
+        ? $estiloCardCategorias
+        : \App\Models\PortfolioArtista::ESTILO_CARD_CATEGORIA_3D;
 @endphp
 <body style="--roxo-appolo: {{ $corPrimariaPortfolio }}; --roxo-claro: {{ $corSecundariaPortfolio }};">
 @include('Components.navbarbootstrap')
@@ -298,7 +303,7 @@
                                 @endphp
                                 <div class="col-md-4 perfil-categoria-card-col">
                                     <a href="{{ route('usuarios.perfilPublico', ['id' => $usuario->id, 'categoria' => $cat->id]) }}"
-                                       class="perfil-categoria-card"
+                                       class="perfil-categoria-card perfil-categoria-card-estilo-{{ $estiloCardCategorias }}"
                                        aria-label="Ver categoria {{ $cat->nome }}">
                                         <span class="perfil-categoria-preview-stack {{ $previewImages->isEmpty() ? 'perfil-categoria-preview-empty' : '' }}" aria-hidden="true">
                                             @foreach($previewImages as $previewIndex => $previewImage)
@@ -308,6 +313,7 @@
                                         </span>
                                         <span class="perfil-categoria-overlay" aria-hidden="true"></span>
                                         <span class="perfil-categoria-title">{{ $cat->nome }}</span>
+                                        <span class="perfil-categoria-description">{{ \Illuminate\Support\Str::limit($cat->descricao ?: 'Ver posts desta categoria', 90) }}</span>
                                     </a>
                                 </div>
                             @endforeach
@@ -632,6 +638,7 @@
             <div class="modal-content">
                 <form action="{{ $portfolio ? route('portfolio.update', $portfolio->id) : route('portfolio.store') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="categorias_form" value="1">
                     @if($portfolio)
                         @method('PUT')
                     @endif
@@ -724,59 +731,182 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <p class="small text-muted">Opcional: organize posts por tema. Posts sem categoria aparecem na página principal do portfólio.</p>
-                            <h6 class="mt-2">Nova categoria</h6>
-                            <form action="{{ route('categorias-posts-portfolio.store') }}" method="POST" class="border rounded p-3 mb-4">
-                                @csrf
-                                <div class="mb-2">
+                            <ul class="nav nav-tabs perfil-categorias-tabs mb-3" id="categoriasPortfolioTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="categorias-tab" data-bs-toggle="tab" data-bs-target="#categorias-tab-pane" type="button" role="tab" aria-controls="categorias-tab-pane" aria-selected="true">
+                                        Categorias
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="estilo-tab" data-bs-toggle="tab" data-bs-target="#estilo-tab-pane" type="button" role="tab" aria-controls="estilo-tab-pane" aria-selected="false">
+                                        Estilo
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content" id="categoriasPortfolioTabsContent">
+                                <div class="tab-pane fade show active" id="categorias-tab-pane" role="tabpanel" aria-labelledby="categorias-tab" tabindex="0">
+                                    <div class="perfil-categorias-toolbar">
+                                        <p class="small text-muted mb-0">Opcional: organize posts por tema. Posts sem categoria aparecem na página principal do portfólio.</p>
+                                        <button type="button" class="btn btn-outline-custom btn-sm perfil-categoria-icon-btn" onclick="openNovaCategoriaPortfolioModal()" aria-label="Adicionar categoria">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="perfil-categorias-list">
+                                        <div class="perfil-categorias-list-head">
+                                            <span>Ordem</span>
+                                            <span>Nome da categoria</span>
+                                            <span>Ações</span>
+                                        </div>
+                                        @forelse(($categoriasPortfolio ?? collect()) as $cat)
+                                            <div class="perfil-categorias-list-row">
+                                                <span class="perfil-categorias-list-order">{{ $cat->ordem }}</span>
+                                                <span class="perfil-categorias-list-name">{{ $cat->nome }}</span>
+                                                <span class="perfil-categorias-list-actions">
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-outline-custom btn-sm perfil-categoria-icon-btn"
+                                                        data-update-url="{{ route('categorias-posts-portfolio.update', $cat) }}"
+                                                        data-categoria-nome="{{ $cat->nome }}"
+                                                        data-categoria-ordem="{{ $cat->ordem }}"
+                                                        data-categoria-descricao="{{ $cat->descricao }}"
+                                                        onclick="openEditCategoriaPortfolioModal(this)"
+                                                        aria-label="Editar categoria {{ $cat->nome }}"
+                                                    >
+                                                        <i class="bi bi-journal-text"></i>
+                                                    </button>
+                                                    <form action="{{ route('categorias-posts-portfolio.destroy', $cat) }}" method="POST" class="d-inline" onsubmit="return confirm('Excluir esta categoria? Os posts ficam sem categoria.');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm perfil-categoria-icon-btn" aria-label="Excluir categoria {{ $cat->nome }}">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </span>
+                                            </div>
+                                        @empty
+                                            <div class="perfil-categorias-empty">
+                                                Nenhuma categoria cadastrada ainda.
+                                            </div>
+                                        @endforelse
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="estilo-tab-pane" role="tabpanel" aria-labelledby="estilo-tab" tabindex="0">
+                                    @php
+                                        $previewEstiloImages = $portfolio->posts
+                                            ->flatMap(fn ($post) => $post->imagens)
+                                            ->take(3)
+                                            ->values();
+                                    @endphp
+                                    <form action="{{ route('portfolio.update', $portfolio->id) }}" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        <p class="small text-muted">Escolha como os cards das categorias aparecem no seu portfólio público.</p>
+                                        <div class="perfil-estilos-grid">
+                                            @foreach($estilosCardsCategorias as $estiloId => $estilo)
+                                                <label class="perfil-estilo-option {{ $estiloCardCategorias === $estiloId ? 'perfil-estilo-option-active' : '' }}" for="estilo_card_categoria_{{ $estiloId }}">
+                                                    <input
+                                                        class="form-check-input"
+                                                        type="radio"
+                                                        name="estilo_card_categorias_portfolio"
+                                                        id="estilo_card_categoria_{{ $estiloId }}"
+                                                        value="{{ $estiloId }}"
+                                                        {{ $estiloCardCategorias === $estiloId ? 'checked' : '' }}
+                                                    >
+                                                    <span class="perfil-estilo-preview-wrap">
+                                                        <span class="perfil-categoria-card perfil-categoria-card-estilo-{{ $estiloId }} perfil-categoria-card-preview">
+                                                            <span class="perfil-categoria-preview-stack {{ $previewEstiloImages->isEmpty() ? 'perfil-categoria-preview-empty' : '' }}" aria-hidden="true">
+                                                                @foreach($previewEstiloImages as $previewIndex => $previewImage)
+                                                                    <span class="perfil-categoria-preview-foto perfil-categoria-preview-foto-{{ $previewIndex + 1 }}"
+                                                                          style="background-image: url('{{ asset('storage/' . $previewImage->caminho_imagem) }}');"></span>
+                                                                @endforeach
+                                                            </span>
+                                                            <span class="perfil-categoria-overlay" aria-hidden="true"></span>
+                                                            <span class="perfil-categoria-title">{{ $estilo['nome'] }}</span>
+                                                            <span class="perfil-categoria-description">{{ $estilo['descricao'] }}</span>
+                                                        </span>
+                                                    </span>
+                                                    <span class="perfil-estilo-option-text">
+                                                        <strong>{{ $estilo['nome'] }}</strong>
+                                                        <small>{{ $estilo['descricao'] }}</small>
+                                                    </span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                        <div class="text-end mt-3">
+                                            <button type="submit" class="btn btn-outline-custom btn-sm">Salvar estilo</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="novaCategoriaPortfolioModal" tabindex="-1" aria-labelledby="novaCategoriaPortfolioModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form action="{{ route('categorias-posts-portfolio.store') }}" method="POST">
+                            @csrf
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="novaCategoriaPortfolioModalLabel">Nova categoria</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
                                     <label class="form-label">Nome</label>
                                     <input type="text" name="nome" class="form-control" required maxlength="255">
                                 </div>
-                                <div class="mb-2">
-                                    <label class="form-label">Descrição (opcional)</label>
-                                    <textarea name="descricao" class="form-control" rows="2"></textarea>
-                                </div>
-                                <div class="mb-2">
+                                <div class="mb-3">
                                     <label class="form-label">Ordem</label>
                                     <input type="number" name="ordem" class="form-control" value="0">
                                 </div>
-                                <button type="submit" class="btn btn-outline-custom btn-sm">Adicionar</button>
-                            </form>
-
-                            <h6>Categorias existentes</h6>
-                            @forelse(($categoriasPortfolio ?? collect()) as $cat)
-                                <div class="border rounded p-3 mb-3">
-                                    <form action="{{ route('categorias-posts-portfolio.update', $cat) }}" method="POST">
-                                        @csrf
-                                        @method('PUT')
-                                        <div class="row g-2 align-items-end">
-                                            <div class="col-md-5">
-                                                <label class="form-label small">Nome</label>
-                                                <input type="text" name="nome" class="form-control form-control-sm" value="{{ $cat->nome }}" required>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label small">Ordem</label>
-                                                <input type="number" name="ordem" class="form-control form-control-sm" value="{{ $cat->ordem }}">
-                                            </div>
-                                            <div class="col-md-3 text-md-end">
-                                                <button type="submit" class="btn btn-outline-custom btn-sm">Salvar</button>
-                                            </div>
-                                            <div class="col-12">
-                                                <label class="form-label small">Descrição</label>
-                                                <textarea name="descricao" class="form-control form-control-sm" rows="2">{{ $cat->descricao }}</textarea>
-                                            </div>
-                                        </div>
-                                    </form>
-                                    <form action="{{ route('categorias-posts-portfolio.destroy', $cat) }}" method="POST" class="mt-2" onsubmit="return confirm('Excluir esta categoria? Os posts ficam sem categoria.');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger btn-sm">Excluir</button>
-                                    </form>
+                                <div class="mb-0">
+                                    <label class="form-label">Descrição (opcional)</label>
+                                    <textarea name="descricao" class="form-control" rows="3"></textarea>
                                 </div>
-                            @empty
-                                <p class="text-muted small mb-0">Nenhuma categoria ainda.</p>
-                            @endforelse
-                        </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-outline-custom">Adicionar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="editarCategoriaPortfolioModal" tabindex="-1" aria-labelledby="editarCategoriaPortfolioModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form id="editarCategoriaPortfolioForm" action="" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editarCategoriaPortfolioModalLabel">Editar categoria</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="editar_categoria_portfolio_nome" class="form-label">Nome</label>
+                                    <input type="text" name="nome" id="editar_categoria_portfolio_nome" class="form-control" required maxlength="255">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editar_categoria_portfolio_ordem" class="form-label">Ordem</label>
+                                    <input type="number" name="ordem" id="editar_categoria_portfolio_ordem" class="form-control" value="0">
+                                </div>
+                                <div class="mb-0">
+                                    <label for="editar_categoria_portfolio_descricao" class="form-label">Descrição</label>
+                                    <textarea name="descricao" id="editar_categoria_portfolio_descricao" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-outline-custom">Salvar</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -846,6 +976,40 @@
         const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deletePostConfirmModal'));
         deleteConfirmModal.show();
     }
+
+    function openNovaCategoriaPortfolioModal() {
+        const modalEl = document.getElementById('novaCategoriaPortfolioModal');
+        if (!modalEl) return;
+
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+
+    function openEditCategoriaPortfolioModal(button) {
+        const form = document.getElementById('editarCategoriaPortfolioForm');
+        const nome = document.getElementById('editar_categoria_portfolio_nome');
+        const ordem = document.getElementById('editar_categoria_portfolio_ordem');
+        const descricao = document.getElementById('editar_categoria_portfolio_descricao');
+
+        if (!form || !nome || !ordem || !descricao) return;
+
+        form.action = button.dataset.updateUrl || '';
+        nome.value = button.dataset.categoriaNome || '';
+        ordem.value = button.dataset.categoriaOrdem || 0;
+        descricao.value = button.dataset.categoriaDescricao || '';
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('editarCategoriaPortfolioModal')).show();
+    }
+
+    ['novaCategoriaPortfolioModal', 'editarCategoriaPortfolioModal'].forEach(function (modalId) {
+        const modalEl = document.getElementById(modalId);
+        if (!modalEl) return;
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            if (document.querySelector('#categoriasPortfolioModal.show')) {
+                document.body.classList.add('modal-open');
+            }
+        });
+    });
 
     (function () {
         var btnNao = document.getElementById('btnConviteCadastroNao');

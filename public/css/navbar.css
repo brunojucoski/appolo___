@@ -101,6 +101,12 @@
      color: var(--roxo-appolo)
 }
 
+.text-nome {
+  color: var(--roxo-appolo);
+  font-weight: bold;
+  font-family: "Jost", sans-serif !important;
+  text-transform: uppercase !important;
+}
 
 .btn-outline-custom {
     border: 2px solid var(--roxo-appolo) !important;

@@ -34,6 +34,8 @@ class Usuario extends Authenticatable
         'bairro',
         'endereco', 
         'cidade',
+        'latitude',
+        'longitude',
         'telefone'
     ];
 
@@ -44,6 +46,8 @@ class Usuario extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'data_nasc' => 'date',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
     ];
 
     public function tipo()

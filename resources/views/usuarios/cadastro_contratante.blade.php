@@ -23,7 +23,7 @@
 
         @include('Components.form-validation-summary')
 
-        <form id="form-cadastro" action="{{ route('usuarios.storeContratante') }}" method="POST">
+        <form id="form-cadastro" action="{{ route('usuarios.storeContratante') }}" method="POST" data-address-form>
             @csrf
 
             <label class="form-label small mb-1">Nome</label>
@@ -56,6 +56,38 @@
             <input type="date" name="data_nasc" required
                    class="form-control @error('data_nasc') is-invalid @enderror"
                    value="{{ old('data_nasc') }}">
+
+            <label class="form-label small mb-1">CEP</label>
+            <input type="text" name="cep" placeholder="00000-000" maxlength="9" inputmode="numeric"
+                   class="form-control @error('cep') is-invalid @enderror"
+                   value="{{ old('cep') }}">
+
+            <label class="form-label small mb-1">Cidade</label>
+            <input type="text" name="cidade" placeholder="Cidade"
+                   class="form-control @error('cidade') is-invalid @enderror"
+                   value="{{ old('cidade') }}">
+
+            <label class="form-label small mb-1">Bairro</label>
+            <input type="text" name="bairro" placeholder="Bairro"
+                   class="form-control @error('bairro') is-invalid @enderror"
+                   value="{{ old('bairro') }}">
+
+            <label class="form-label small mb-1">Endereço</label>
+            <input type="text" name="endereco" placeholder="Rua, avenida ou local de referência"
+                   class="form-control @error('endereco') is-invalid @enderror"
+                   value="{{ old('endereco') }}">
+
+            <input type="hidden" name="latitude" value="{{ old('latitude') }}">
+            <input type="hidden" name="longitude" value="{{ old('longitude') }}">
+
+            <div class="mb-3 mt-2">
+                <label class="form-label small mb-1">Localização no mapa</label>
+                <div class="address-map-card">
+                    <div class="address-map" data-address-map></div>
+                    <p class="address-map-help">Clique no mapa ou arraste o ponto para ajustar sua localização.</p>
+                </div>
+                <div class="address-map-status mt-1" data-address-status></div>
+            </div>
 
             <label class="form-label small mb-1">Senha</label>
             <input type="password" name="senha" placeholder="Senha (mín. 6 caracteres)" required

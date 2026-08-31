@@ -64,6 +64,12 @@ class UsuarioController extends Controller
             'telefone' => 'nullable|string|max:18',
             'data_nasc' => 'required|date|before:today',
             'sexo_usuario' => 'required|integer|in:1,2,3',
+            'cidade' => 'nullable|string|max:255',
+            'cep' => 'nullable|string|max:20',
+            'bairro' => 'nullable|string|max:255',
+            'endereco' => 'nullable|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ], [
             'nome.required' => 'Informe seu nome.',
             'documento.required' => 'Informe o CPF ou CNPJ.',
@@ -281,6 +287,8 @@ class UsuarioController extends Controller
         'cep' => 'nullable|string|max:20',
         'bairro' => 'nullable|string|max:255',
         'endereco' => 'nullable|string|max:255',
+        'latitude' => 'nullable|numeric|between:-90,90',
+        'longitude' => 'nullable|numeric|between:-180,180',
         'senha' => 'nullable|string|min:8|confirmed',
         // Sem regra "image": GIF (principalmente animado) falha em alguns ambientes com "image";
         // mime/extension são conferidos por mimes + max em KB.
@@ -295,6 +303,8 @@ class UsuarioController extends Controller
     $usuario->cep = $request->cep;
     $usuario->bairro = $request->bairro;
     $usuario->endereco = $request->endereco;
+    $usuario->latitude = $request->latitude;
+    $usuario->longitude = $request->longitude;
 
     if ($request->filled('senha')) {
         $usuario->senha = Hash::make($request->senha);
@@ -346,7 +356,7 @@ class UsuarioController extends Controller
 public function listarPublico(Request $request)
 {
     $query = Usuario::where('tipo_usuario', 2)
-        ->with(['categoriasArtisticas','portfolioArtista'])
+        ->with(['categoriasArtisticas','portfolioArtista.feedbacksRecebidos'])
         
         ->whereNotNull('nome');
 
@@ -361,7 +371,13 @@ public function listarPublico(Request $request)
         $query->where('cidade', 'like', '%' . $request->cidade . '%');
     }
 
-    $usuarios = $query->latest()->paginate(5);
+    $artistasMapa = (clone $query)
+        ->whereNotNull('latitude')
+        ->whereNotNull('longitude')
+        ->latest()
+        ->get();
+
+    $usuarios = (clone $query)->latest()->paginate(5)->withQueryString();
     if ($request->ajax()) {
     return view('partials.lista_usuarios', compact('usuarios'))->render();
 }
@@ -373,7 +389,7 @@ public function listarPublico(Request $request)
     ->distinct()
     ->pluck('cidade');
 
-    return view('artistas', compact('usuarios', 'categorias', 'cidades'));
+    return view('artistas', compact('usuarios', 'categorias', 'cidades', 'artistasMapa'));
 }
 
     
